@@ -1,5 +1,9 @@
 package ru.lectograph.app;
 
+import ru.lectograph.app.database.LectureStore;
+import ru.lectograph.app.models.Lecture;
+import ru.lectograph.app.recording.RecordingService;
+
 import android.Manifest;
 import android.app.*;
 import android.content.*;
@@ -33,7 +37,7 @@ public class MainActivity extends Activity {
             if (shownRecording != RecordingService.activeId && !starting) {
                 if (shownRecording != -1 && RecordingService.activeId == -1) {
                     openedId = shownRecording;
-                    LectureStore.Lecture saved = store.get(openedId);
+                    Lecture saved = store.get(openedId);
                     section = saved != null && saved.subject().isEmpty() ? "drafts" : "library";
                 }
                 render();
@@ -111,7 +115,7 @@ public class MainActivity extends Activity {
             results.removeAllViews();
             String query = search.getText().toString().toLowerCase(Locale.ROOT);
             int count = 0;
-            for (LectureStore.Lecture l : store.all()) {
+            for (Lecture l : store.all()) {
                 if (drafts != l.subject().isEmpty()) continue;
                 if (!subject.isEmpty() && !subject.equals(l.subject())) continue;
                 if (!(l.title() + " " + l.notes()).toLowerCase(Locale.ROOT).contains(query)) continue;
@@ -130,7 +134,7 @@ public class MainActivity extends Activity {
         }); filter.run();
     }
     private void recording() {
-        LectureStore.Lecture l = store.get(RecordingService.activeId);
+        Lecture l = store.get(RecordingService.activeId);
         label("ДИКТОФОН", 12, muted); label(l == null ? "Запись лекции" : l.title(), 28, foreground);
         timer = label(time(RecordingService.elapsed()), 56, foreground);
         label("Запись продолжается при выключенном экране. После остановки она сохранится на устройстве.", 15, muted);
@@ -141,7 +145,7 @@ public class MainActivity extends Activity {
         if (l != null) notes(l);
     }
     private void lecture() {
-        LectureStore.Lecture l = store.get(openedId);
+        Lecture l = store.get(openedId);
         button("← Назад", () -> { openedId = -1; render(); });
         label(l.subject().isEmpty() ? "ЧЕРНОВИК" : l.subject(), 12, muted); label(l.title(), 30, foreground);
         label(date(l.created()) + " · " + time(l.duration()) + " · " + status(l.status()), 14, muted);
@@ -167,7 +171,7 @@ public class MainActivity extends Activity {
                     store.delete(l.id()); openedId = -1; render();
                 }).show());
     }
-    private void notes(LectureStore.Lecture l) {
+    private void notes(Lecture l) {
         label("Мои заметки", 21, foreground); savedNotes = l.notes();
         noteEditor = input("Что важно запомнить?", savedNotes); noteEditor.setMinLines(5); noteEditor.setGravity(Gravity.TOP);
         noteEditor.setTag(l.id());
@@ -182,7 +186,7 @@ public class MainActivity extends Activity {
         if (noteEditor == null) return;
         String text = noteEditor.getText().toString();
         if (text.equals(savedNotes)) return;
-        LectureStore.Lecture l = store.get((long) noteEditor.getTag());
+        Lecture l = store.get((long) noteEditor.getTag());
         if (l != null) { store.edit(l.id(), l.title(), l.subject(), text); savedNotes = text; }
     }
     private void settings() {
@@ -201,7 +205,7 @@ public class MainActivity extends Activity {
             dialog.dismiss(); startRecording(title.getText().toString().trim(), sub.getText().toString().trim());
         })); dialog.show();
     }
-    private void editDialog(LectureStore.Lecture l) {
+    private void editDialog(Lecture l) {
         LinearLayout form = form(); EditText title = field(form, "Название лекции", l.title()); AutoCompleteTextView sub = subjectField(form, l.subject());
         AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Оформить лекцию").setView(form).setNegativeButton("Отмена", null).setPositiveButton("Сохранить", null).create();
         dialog.setOnShowListener(d -> dialog.getButton(-1).setOnClickListener(v -> {

@@ -1,4 +1,6 @@
-package ru.lectograph.app;
+package ru.lectograph.app.database;
+
+import ru.lectograph.app.models.Lecture;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,9 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class LectureStore extends SQLiteOpenHelper {
-    public record Lecture(long id, String title, String subject, String notes, String audio,
-                          long created, long duration, String status) {}
-
     public LectureStore(Context context) { super(context, "lectograph.db", null, 1); }
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE subjects (name TEXT PRIMARY KEY NOT NULL)");

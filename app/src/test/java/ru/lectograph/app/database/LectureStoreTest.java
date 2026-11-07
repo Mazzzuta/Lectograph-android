@@ -1,4 +1,4 @@
-package ru.lectograph.app;
+package ru.lectograph.app.database;
 
 import android.content.Context;
 import org.junit.Test;

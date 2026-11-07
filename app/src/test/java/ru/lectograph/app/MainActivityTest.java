@@ -1,5 +1,7 @@
 package ru.lectograph.app;
 
+import ru.lectograph.app.database.LectureStore;
+
 import android.widget.Button;
 import android.widget.EditText;
 import android.view.View;

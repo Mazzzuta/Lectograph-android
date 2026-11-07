@@ -1,4 +1,8 @@
-package ru.lectograph.app;
+package ru.lectograph.app.recording;
+
+import ru.lectograph.app.MainActivity;
+import ru.lectograph.app.R;
+import ru.lectograph.app.database.LectureStore;
 
 import android.app.*;
 import android.content.Intent;
