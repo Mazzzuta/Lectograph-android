@@ -16,6 +16,8 @@ import ru.lectograph.app.ui.lecture.LectureScreen;
 import ru.lectograph.app.ui.recording.RecordingScreen;
 import ru.lectograph.app.ui.settings.SettingsScreen;
 import ru.lectograph.app.ui.theme.Palette;
+import ru.lectograph.app.ui.theme.GlassStyle;
+import android.view.Gravity;
 
 public class MainActivity extends Activity {
     private LectureStore store;
@@ -66,9 +68,9 @@ public class MainActivity extends Activity {
     private void render() {
         stopPlayback(); recordingScreen = null;
         shownRecording = RecordingService.activeId;
-        Palette theme = Palette.resolve(this, getPreferences(0).getString("theme", "system"));
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(theme.background());
+        Palette theme = Palette.resolve(this, getPreferences(0).getString("theme", "dark"));
+        FrameLayout root = new FrameLayout(this);
+        root.setBackground(GlassStyle.background(root, theme));
         root.setOnApplyWindowInsetsListener((v, insets) -> {
             v.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(), insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
             return insets;
@@ -78,16 +80,20 @@ public class MainActivity extends Activity {
         LinearLayout page = new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL);
         ScreenUi ui = new ScreenUi(this, page, theme);
         page.setPadding(ui.dp(22), ui.dp(20), ui.dp(22), ui.dp(24));
-        scroll.addView(page); root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        scroll.setClipToPadding(false); scroll.setPadding(0, 0, 0, ui.dp(112));
+        scroll.setVerticalScrollBarEnabled(false);
+        scroll.addView(page); root.addView(scroll, new FrameLayout.LayoutParams(-1, -1));
         dialogs = new LectureDialogs(this, ui, store);
         Lecture opened = openedId == -1 ? null : store.get(openedId);
         if (RecordingService.activeId != -1) recordingScreen = new RecordingScreen(ui, store);
         else if (opened != null) lectureScreen = new LectureScreen(this, ui, store, opened);
         else if (section.equals("settings")) SettingsScreen.show(ui, getPreferences(0), this::render);
         else LibraryScreen.show(this, ui, store, section.equals("drafts"), subject);
+        FrameLayout.LayoutParams navParams = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
+        navParams.setMargins(ui.dp(22), 0, ui.dp(22), ui.dp(18));
         root.addView(BottomNavigation.create(ui, section, destination -> {
             section = destination; subject = ""; openedId = -1; render();
-        }));
+        }), navParams);
     }
     public void openSubject(String name) { subject = name; render(); }
     public void openLecture(long id) {

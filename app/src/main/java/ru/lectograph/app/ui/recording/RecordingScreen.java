@@ -19,7 +19,7 @@ public final class RecordingScreen {
         timer = ui.label(LectureFormat.time(RecordingService.elapsed()), 56, ui.theme.foreground());
         ui.label("Запись продолжается при выключенном экране. После остановки она сохранится на устройстве.", 15, ui.theme.muted());
         pause = ui.button("Пауза", () -> ui.context.startService(new Intent(ui.context, RecordingService.class).setAction("pause")));
-        ui.button("Завершить и сохранить", () -> {
+        ui.primaryButton("Завершить и сохранить", () -> {
             ui.context.startService(new Intent(ui.context, RecordingService.class).setAction("stop"));
         });
         if (l != null) LectureNotes.show(ui, store, l);
