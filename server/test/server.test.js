@@ -18,6 +18,11 @@ test('tests with invented source quotes are rejected', () => {
   const questions = [{ question: 'Что?', options: ['А', 'Б', 'В', 'Г'], correctIndex: 0, explanation: 'Ответ', sourceQuote: 'Выдуманная цитата' }];
   assert.throws(() => validateResult('test', { questions }, 'Настоящая лекция'), /проверить/);
 });
+test('invented teacher answers are not presented as lecture content', () => {
+  const data = { short: 'Краткое содержание', detailed: 'Подробное содержание', clarifications: [], studentQuestions: [{ question: 'Что такое сила?', teacherAnswer: 'Выдуманный ответ', aiAnswer: '' }] };
+  assert.throws(() => validateResult('study', data, 'Что такое сила? Ответа в записи нет.'), /подтвердить/);
+  assert.match(validateResult('question', { answer: 'Неподтверждённый ответ', sourceQuote: '' }, 'Лекция').answer, /не найдено/);
+});
 test('daily lecture limit stops requests before calling Gemini', async t => {
   const quota = new Quota(':memory:', limits); let calls = 0;
   const server = createServer({ quota, key: 'test-key', model: 'test', provider: async () => { calls++; return { detailed: 'Конспект' }; } });
