@@ -9,6 +9,6 @@ public final class SettingsScreen {
             ui.button(theme[1], () -> { preferences.edit().putString("theme", theme[0]).apply(); refresh.run(); });
         ui.label("Хранение", 21, ui.theme.foreground());
         ui.label("Записи и заметки хранятся на этом устройстве. Облачная обработка ещё не подключена. Экспорт и импорт будут добавлены отдельно.", 15, ui.theme.muted());
-        ui.label("Лектограф · 0.1.0", 14, ui.theme.muted());
+        ui.label("Лектограф · 0.2.0", 14, ui.theme.muted());
     }
 }

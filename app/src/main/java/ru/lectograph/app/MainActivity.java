@@ -18,6 +18,7 @@ import ru.lectograph.app.ui.settings.SettingsScreen;
 import ru.lectograph.app.ui.theme.Palette;
 import ru.lectograph.app.ui.theme.GlassStyle;
 import android.view.Gravity;
+import ru.lectograph.app.transcription.TranscriptionService;
 
 public class MainActivity extends Activity {
     private LectureStore store;
@@ -28,9 +29,12 @@ public class MainActivity extends Activity {
     private long openedId = -1, shownRecording = -1;
     private String pendingTitle = "", pendingSubject = "";
     private boolean starting;
+    private long processingGeneration;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable tick = new Runnable() {
         @Override public void run() {
+            if (processingGeneration != TranscriptionService.generation) render();
+            if (lectureScreen != null) lectureScreen.refreshProcessing();
             if (shownRecording != RecordingService.activeId && !starting) {
                 if (shownRecording != -1 && RecordingService.activeId == -1) {
                     openedId = shownRecording;
@@ -50,6 +54,7 @@ public class MainActivity extends Activity {
         super.onCreate(state);
         store = new LectureStore(this);
         if (RecordingService.activeId == -1) store.recoverInterrupted();
+        if (!TranscriptionService.running) store.recoverTranscriptions();
         if (state != null) { section = state.getString("section", "library"); subject = state.getString("subject", ""); openedId = state.getLong("lecture", -1); }
         render();
         if (getIntent().getBooleanExtra("quickRecord", false) && state == null) {
@@ -66,6 +71,7 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy() { stopPlayback(); store.close(); super.onDestroy(); }
 
     private void render() {
+        processingGeneration = TranscriptionService.generation;
         stopPlayback(); recordingScreen = null;
         shownRecording = RecordingService.activeId;
         Palette theme = Palette.resolve(this, getPreferences(0).getString("theme", "dark"));
