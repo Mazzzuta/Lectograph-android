@@ -1,6 +1,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="#242629" android:gravity="center" android:orientation="vertical" android:padding="12dp">
-    <Button android:id="@+id/record" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Записать" android:contentDescription="Начать быструю запись лекции" />
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Лектограф" android:textColor="#EDE7D9" />
+    android:background="@drawable/widget_glass" android:gravity="center" android:orientation="vertical" android:padding="12dp">
+    <Button android:id="@+id/record" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="48dp" android:background="@drawable/widget_record_button" android:backgroundTint="@null"
+        android:textColor="#17191C" android:textAllCaps="false" android:text="Записать" android:contentDescription="Начать быструю запись лекции" />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+        android:text="Лектограф" android:textSize="12sp" android:textColor="#FFFFFF" />
 </LinearLayout>
