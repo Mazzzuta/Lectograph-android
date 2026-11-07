@@ -9,6 +9,7 @@ import ru.lectograph.app.database.LectureStore;
 import ru.lectograph.app.models.Lecture;
 import ru.lectograph.app.transcription.TranscriptionService;
 import ru.lectograph.app.transcription.WhisperModel;
+import ru.lectograph.app.ai.StudyService;
 import ru.lectograph.app.ui.components.ScreenUi;
 import ru.lectograph.app.utils.LectureFormat;
 
@@ -20,7 +21,7 @@ final class TranscriptPanel {
         state = ui.label("", 14, ui.theme.muted());
         progress = new ProgressBar(ui.context, null, android.R.attr.progressBarStyleHorizontal);
         progress.setMax(100); ui.page.addView(progress);
-        boolean busy = TranscriptionService.running;
+        boolean busy = TranscriptionService.running || StudyService.running;
         if (!WhisperModel.ready(ui.context)) {
             ui.label("Для распознавания один раз скачайте модель — 148 МБ. Затем аудио обрабатывается на телефоне без интернета. Язык — русский.", 14, ui.theme.muted());
             Button download = ui.primaryButton("Скачать Whisper base · 148 МБ", () -> start(ui, "download", -1));
@@ -40,7 +41,6 @@ final class TranscriptPanel {
                 ui.label(segment.text(), 17, ui.theme.foreground()).setTextIsSelectable(true);
             }
         }
-        ui.label("Конспекты и тесты появятся после подключения Gemini.", 14, ui.theme.muted());
     }
     void refresh(ScreenUi ui, LectureStore store, long id) {
         boolean running = TranscriptionService.running;

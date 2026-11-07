@@ -11,6 +11,9 @@ import ru.lectograph.app.ui.components.ScreenUi;
 import ru.lectograph.app.ui.components.LectureNotes;
 import ru.lectograph.app.utils.LectureFormat;
 import ru.lectograph.app.transcription.TranscriptionService;
+import ru.lectograph.app.ai.StudyService;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 
 public final class LectureScreen implements AutoCloseable {
     private MediaPlayer player;
@@ -18,7 +21,7 @@ public final class LectureScreen implements AutoCloseable {
     private final ScreenUi ui;
     private final LectureStore store;
     private final Lecture lecture;
-    public LectureScreen(MainActivity activity, ScreenUi ui, LectureStore store, Lecture l) {
+    public LectureScreen(MainActivity activity, ScreenUi ui, LectureStore store, Lecture l, String tab) {
         this.ui = ui; this.store = store; this.lecture = l;
         ui.button("← Назад", activity::closeLecture);
         ui.label(l.subject().isEmpty() ? "ЧЕРНОВИК" : l.subject(), 12, ui.theme.muted()); ui.label(l.title(), 30, ui.theme.foreground());
@@ -33,12 +36,20 @@ public final class LectureScreen implements AutoCloseable {
                 player.start(); play.setText("■ Остановить воспроизведение");
             } catch (Exception e) { stopPlayback(); ui.toast("Аудиофайл недоступен или повреждён"); }
         });
-        LectureNotes.show(ui, store, l);
-        transcript = new TranscriptPanel(ui, store, l, this::playFrom);
+        HorizontalScrollView tabs = new HorizontalScrollView(ui.context); tabs.setHorizontalScrollBarEnabled(false);
+        LinearLayout row = new LinearLayout(ui.context); tabs.addView(row); ui.page.addView(tabs);
+        for (String[] item : new String[][]{{"text", "Текст"}, {"summary", "Конспект"}, {"review", "Разбор"}, {"notes", "Заметки"}, {"test", "Тест"}}) {
+            Button button = new Button(ui.context); button.setText(item[1]); button.setAllCaps(false); ui.styleButton(button);
+            button.setTextColor(ui.theme.foreground()); button.setAlpha(tab.equals(item[0]) ? 1f : 0.65f);
+            button.setOnClickListener(v -> activity.selectLectureTab(item[0])); row.addView(button);
+        }
+        transcript = tab.equals("text") ? new TranscriptPanel(ui, store, l, this::playFrom) : null;
+        if (tab.equals("notes")) LectureNotes.show(ui, store, l);
+        else if (!tab.equals("text")) StudyPanel.show(ui, store, l, tab);
         ui.button("Удалить лекцию", () -> new AlertDialog.Builder(ui.context).setTitle("Удалить лекцию?")
                 .setMessage("Аудио и заметки будут удалены без возможности восстановления.")
                 .setNegativeButton("Отмена", null).setPositiveButton("Удалить", (d, w) -> {
-                    if (TranscriptionService.running && TranscriptionService.lectureId == l.id()) {
+                    if ((TranscriptionService.running && TranscriptionService.lectureId == l.id()) || (StudyService.running && StudyService.lectureId == l.id())) {
                         ui.toast("Сначала отмените распознавание и дождитесь его остановки"); return;
                     }
                     stopPlayback();
@@ -47,7 +58,7 @@ public final class LectureScreen implements AutoCloseable {
                     store.delete(l.id()); activity.closeLecture();
                 }).show());
     }
-    public void refreshProcessing() { transcript.refresh(ui, store, lecture.id()); }
+    public void refreshProcessing() { if (transcript != null) transcript.refresh(ui, store, lecture.id()); }
     private void playFrom(long milliseconds) {
         stopPlayback();
         try {

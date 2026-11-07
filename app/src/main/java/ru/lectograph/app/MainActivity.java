@@ -19,6 +19,7 @@ import ru.lectograph.app.ui.theme.Palette;
 import ru.lectograph.app.ui.theme.GlassStyle;
 import android.view.Gravity;
 import ru.lectograph.app.transcription.TranscriptionService;
+import ru.lectograph.app.ai.StudyService;
 
 public class MainActivity extends Activity {
     private LectureStore store;
@@ -30,10 +31,13 @@ public class MainActivity extends Activity {
     private String pendingTitle = "", pendingSubject = "";
     private boolean starting;
     private long processingGeneration;
+    private long studyGeneration;
+    private String lectureTab = "text";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable tick = new Runnable() {
         @Override public void run() {
             if (processingGeneration != TranscriptionService.generation) render();
+            if (studyGeneration != StudyService.generation) render();
             if (lectureScreen != null) lectureScreen.refreshProcessing();
             if (shownRecording != RecordingService.activeId && !starting) {
                 if (shownRecording != -1 && RecordingService.activeId == -1) {
@@ -56,6 +60,7 @@ public class MainActivity extends Activity {
         if (RecordingService.activeId == -1) store.recoverInterrupted();
         if (!TranscriptionService.running) store.recoverTranscriptions();
         if (state != null) { section = state.getString("section", "library"); subject = state.getString("subject", ""); openedId = state.getLong("lecture", -1); }
+        if (state != null) lectureTab = state.getString("lectureTab", "text");
         render();
         if (getIntent().getBooleanExtra("quickRecord", false) && state == null) {
             getIntent().removeExtra("quickRecord");
@@ -64,6 +69,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle out) {
         out.putString("section", section); out.putString("subject", subject); out.putLong("lecture", openedId);
+        out.putString("lectureTab", lectureTab);
         super.onSaveInstanceState(out);
     }
     @Override protected void onResume() { super.onResume(); handler.post(tick); }
@@ -72,6 +78,7 @@ public class MainActivity extends Activity {
 
     private void render() {
         processingGeneration = TranscriptionService.generation;
+        studyGeneration = StudyService.generation;
         stopPlayback(); recordingScreen = null;
         shownRecording = RecordingService.activeId;
         Palette theme = Palette.resolve(this, getPreferences(0).getString("theme", "dark"));
@@ -92,7 +99,7 @@ public class MainActivity extends Activity {
         dialogs = new LectureDialogs(this, ui, store);
         Lecture opened = openedId == -1 ? null : store.get(openedId);
         if (RecordingService.activeId != -1) recordingScreen = new RecordingScreen(ui, store);
-        else if (opened != null) lectureScreen = new LectureScreen(this, ui, store, opened);
+        else if (opened != null) lectureScreen = new LectureScreen(this, ui, store, opened, lectureTab);
         else if (section.equals("settings")) SettingsScreen.show(ui, getPreferences(0), this::render);
         else LibraryScreen.show(this, ui, store, section.equals("drafts"), subject);
         FrameLayout.LayoutParams navParams = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
@@ -103,12 +110,14 @@ public class MainActivity extends Activity {
     }
     public void openSubject(String name) { subject = name; render(); }
     public void openLecture(long id) {
+        if (id != openedId) lectureTab = "text";
         openedId = id;
         Lecture lecture = store.get(id);
         if (lecture != null) section = lecture.subject().isEmpty() ? "drafts" : "library";
         render();
     }
     public void closeLecture() { openedId = -1; render(); }
+    public void selectLectureTab(String tab) { lectureTab = tab; render(); }
     public void refresh() { render(); }
     public void showRecordDialog() { dialogs.record(); }
     public void showSubjectDialog() { dialogs.subject(); }

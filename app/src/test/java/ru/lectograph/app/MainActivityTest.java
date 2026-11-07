@@ -4,6 +4,7 @@ import ru.lectograph.app.database.LectureStore;
 
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,30 @@ import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 34)
 public class MainActivityTest {
+    @Test public void savedTestCanBeCompletedWithoutGeminiConnection() {
+        var context = RuntimeEnvironment.getApplication();
+        context.deleteDatabase("lectograph.db");
+        try (var store = new LectureStore(context)) {
+            long id = store.create("Тестовая лекция", "", "test.m4a");
+            store.finish(id, 15000, "recorded");
+            store.saveTranscript(id, java.util.List.of(new ru.lectograph.app.models.TranscriptSegment(0, 1000, "Сила измеряется в ньютонах.")));
+            store.saveMaterial(id, "test", "{\"questions\":[{\"question\":\"В чём измеряется сила?\",\"options\":[\"Ньютоны\",\"Метры\",\"Секунды\",\"Кельвины\"],\"correctIndex\":0,\"explanation\":\"Единица силы — ньютон.\",\"sourceQuote\":\"Сила измеряется в ньютонах.\"}]}", store.transcriptText(id));
+            var controller = Robolectric.buildActivity(MainActivity.class).setup();
+            ViewGroup root = controller.get().findViewById(android.R.id.content);
+            button(root, "Черновики").performClick(); button(root, "Тестовая лекция").performClick(); button(root, "Тест").performClick();
+            RadioGroup choices = radioGroup(root); assertNotNull(choices);
+            choices.check(choices.getChildAt(0).getId()); button(root, "Проверить ответы").performClick();
+            assertEquals("Результат: 1 из 1", org.robolectric.shadows.ShadowToast.getTextOfLatestToast());
+            controller.pause().stop().destroy();
+        }
+    }
+    private RadioGroup radioGroup(View view) {
+        if (view instanceof RadioGroup group) return group;
+        if (view instanceof ViewGroup group) for (int i = 0; i < group.getChildCount(); i++) {
+            RadioGroup result = radioGroup(group.getChildAt(i)); if (result != null) return result;
+        }
+        return null;
+    }
     @Test public void draftNotesPersistWhenReturningToLibrary() {
         var context = RuntimeEnvironment.getApplication();
         context.deleteDatabase("lectograph.db");
@@ -30,6 +55,7 @@ public class MainActivityTest {
             ViewGroup root = activity.findViewById(android.R.id.content);
             button(root, "Черновики").performClick();
             button(root, "Проверочная лекция").performClick();
+            button(root, "Заметки").performClick();
             EditText notes = edit(root);
             assertNotNull(notes);
             notes.setText("Проверить определение перед экзаменом");
@@ -49,6 +75,7 @@ public class MainActivityTest {
             ViewGroup root = activity.findViewById(android.R.id.content);
             button(root, "Черновики").performClick();
             button(root, "Черновик\n").performClick();
+            button(root, "Заметки").performClick();
             edit(root).setText("Моя заметка");
             button(root, "Изменить название").performClick();
             org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
