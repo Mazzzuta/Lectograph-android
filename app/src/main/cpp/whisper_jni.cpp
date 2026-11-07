@@ -11,7 +11,7 @@ struct Engine {
 };
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_ru_lectograph_app_transcription_WhisperEngine_load(JNIEnv * env, jclass, jstring path) {
+Java_ru_lectograph_app_transcription_WhisperEngine_load(JNIEnv * env, jobject, jstring path) {
     const char * file = env->GetStringUTFChars(path, nullptr);
     if (!file) return 0;
     auto params = whisper_context_default_params();
@@ -26,19 +26,19 @@ Java_ru_lectograph_app_transcription_WhisperEngine_load(JNIEnv * env, jclass, js
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_ru_lectograph_app_transcription_WhisperEngine_cancelNative(JNIEnv *, jclass, jlong handle) {
+Java_ru_lectograph_app_transcription_WhisperEngine_cancelNative(JNIEnv *, jobject, jlong handle) {
     reinterpret_cast<Engine *>(handle)->cancelled = true;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_ru_lectograph_app_transcription_WhisperEngine_free(JNIEnv *, jclass, jlong handle) {
+Java_ru_lectograph_app_transcription_WhisperEngine_free(JNIEnv *, jobject, jlong handle) {
     auto * engine = reinterpret_cast<Engine *>(handle);
     whisper_free(engine->context);
     delete engine;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_ru_lectograph_app_transcription_WhisperEngine_decode(JNIEnv * env, jclass, jlong handle, jfloatArray audio, jobject listener) {
+Java_ru_lectograph_app_transcription_WhisperEngine_decode(JNIEnv * env, jobject, jlong handle, jfloatArray audio, jobject listener) {
     auto * engine = reinterpret_cast<Engine *>(handle);
     auto cls = env->GetObjectClass(listener);
     jmethodID progress = env->GetMethodID(cls, "onProgress", "(I)V");
