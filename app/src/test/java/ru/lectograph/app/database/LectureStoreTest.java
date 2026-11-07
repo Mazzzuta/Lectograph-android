@@ -60,4 +60,19 @@ public class LectureStoreTest {
             store.delete(1); assertTrue(store.transcript(1).isEmpty()); assertEquals("idle", store.job(1).status());
         }
     }
+    @Test public void generatedMaterialsCannotOverwriteANewerTranscript() {
+        getContext().deleteDatabase("lectograph.db");
+        try (LectureStore store = new LectureStore(getContext())) {
+            long id = store.create("Лекция", "", "original.m4a");
+            store.saveTranscript(id, List.of(new TranscriptSegment(0, 1000, "Исходный текст")));
+            String original = store.transcriptText(id);
+            store.saveMaterial(id, "study", "{\"short\":\"Конспект\"}", original);
+            assertFalse(store.material(id, "study").isEmpty());
+            store.saveTranscript(id, List.of(new TranscriptSegment(0, 1000, "Исправленный текст")));
+            assertTrue(store.material(id, "study").isEmpty());
+            try { store.saveMaterial(id, "study", "{}", original); fail("Stale material accepted"); }
+            catch (IllegalStateException expected) { }
+            assertTrue(store.material(id, "study").isEmpty());
+        }
+    }
 }

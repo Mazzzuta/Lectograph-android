@@ -10,6 +10,9 @@ android {
         targetSdk = 35
         versionCode = 2
         versionName = "0.2.0"
+        val apiUrl = providers.gradleProperty("lectographApiUrl").orElse("").get()
+        require(apiUrl.isEmpty() || (apiUrl.startsWith("https://") || apiUrl.startsWith("http://")) && !apiUrl.any { it == '\n' || it == '\r' })
+        buildConfigField("String", "API_BASE_URL", "\"" + apiUrl.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         externalNativeBuild { cmake { arguments += listOf("-DCMAKE_BUILD_TYPE=Release") } }
     }
@@ -18,6 +21,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     testOptions { unitTests.isIncludeAndroidResources = true }
+    buildFeatures { buildConfig = true }
     externalNativeBuild { cmake { path = file("src/main/cpp/CMakeLists.txt"); version = "3.22.1" } }
 }
 

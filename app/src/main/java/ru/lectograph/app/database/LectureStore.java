@@ -12,14 +12,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class LectureStore extends SQLiteOpenHelper {
-    public LectureStore(Context context) { super(context, "lectograph.db", null, 2); }
+    public LectureStore(Context context) { super(context, "lectograph.db", null, 3); }
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE subjects (name TEXT PRIMARY KEY NOT NULL)");
         db.execSQL("CREATE TABLE lectures (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, subject TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '', audio TEXT NOT NULL, created INTEGER NOT NULL, duration INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL)");
         createTranscripts(db);
+        createMaterials(db);
     }
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion == 1) createTranscripts(db);
+        if (oldVersion < 3) createMaterials(db);
+    }
+    private void createMaterials(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE lecture_materials (lecture_id INTEGER NOT NULL, kind TEXT NOT NULL, json TEXT NOT NULL, PRIMARY KEY(lecture_id,kind))");
+    }
+    public String transcriptText(long id) {
+        StringBuilder text = new StringBuilder();
+        for (TranscriptSegment segment : transcript(id)) text.append(segment.text()).append('\n');
+        return text.toString();
+    }
+    public String material(long id, String kind) {
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT json FROM lecture_materials WHERE lecture_id=? AND kind=?", new String[]{Long.toString(id), kind})) {
+            return c.moveToFirst() ? c.getString(0) : "";
+        }
+    }
+    public void saveMaterial(long id, String kind, String json, String sourceText) {
+        SQLiteDatabase db = getWritableDatabase(); db.beginTransaction();
+        try {
+            if (get(id) == null || !transcriptText(id).equals(sourceText)) throw new IllegalStateException("Текст лекции изменился. Запросите обработку повторно.");
+            ContentValues values = new ContentValues(); values.put("lecture_id", id); values.put("kind", kind); values.put("json", json);
+            db.insertWithOnConflict("lecture_materials", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            db.setTransactionSuccessful();
+        } finally { db.endTransaction(); }
     }
     private void createTranscripts(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE transcripts (lecture_id INTEGER NOT NULL, position INTEGER NOT NULL, start_ms INTEGER NOT NULL, end_ms INTEGER NOT NULL, text TEXT NOT NULL, PRIMARY KEY(lecture_id,position))");
@@ -51,6 +75,7 @@ public final class LectureStore extends SQLiteOpenHelper {
         try {
             if (get(id) == null) throw new IllegalStateException("Лекция удалена");
             db.delete("transcripts", "lecture_id=?", new String[]{Long.toString(id)});
+            db.delete("lecture_materials", "lecture_id=?", new String[]{Long.toString(id)});
             for (int i = 0; i < segments.size(); i++) {
                 TranscriptSegment s = segments.get(i);
                 ContentValues values = new ContentValues(); values.put("lecture_id", id); values.put("position", i);
@@ -114,6 +139,7 @@ public final class LectureStore extends SQLiteOpenHelper {
         try {
             String[] args = {Long.toString(id)};
             db.delete("transcripts", "lecture_id=?", args); db.delete("transcription_jobs", "lecture_id=?", args);
+            db.delete("lecture_materials", "lecture_id=?", args);
             db.delete("lectures", "id=?", args); db.setTransactionSuccessful();
         } finally { db.endTransaction(); }
     }
