@@ -9,3 +9,4 @@ local.properties
 .env
 .cxx/
 **/.cxx/
+server/data/
