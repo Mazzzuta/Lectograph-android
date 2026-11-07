@@ -44,6 +44,21 @@ class MainActivityTest {
         compose.onNodeWithText("Библиотека").performClick()
         compose.waitUntil(5000) { LectureStore(compose.activity).use { it.get(id)?.notes == "Проверить определение" } }
     }
+    @Test fun transcriptIsContinuousByDefaultAndTimedFragmentsRemainAvailable() {
+        LectureStore(compose.activity).use {
+            it.saveTranscript(id, listOf(TranscriptSegment(0, 1500, "Первая фраза."), TranscriptSegment(2000, 4000, "Вторая фраза.")))
+        }
+        open("Текст")
+        compose.waitUntil(5000) {
+            runCatching { compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Первая фраза. Вторая фраза.")) }.isSuccess
+        }
+        compose.onNodeWithText("Первая фраза. Вторая фраза.").assertExists()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Показать фрагменты с таймингами"))
+        compose.onNodeWithText("Показать фрагменты с таймингами").performClick()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("00:00:02"))
+        compose.onNodeWithText("00:00:02").assertHasClickAction()
+        compose.onNodeWithText("Вторая фраза.").assertExists()
+    }
     @Test fun editingDraftPreservesLatestNotes() {
         open("Заметки")
         compose.onNodeWithText("Мои заметки").performScrollTo().performTextInput("Моя заметка")

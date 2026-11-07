@@ -25,6 +25,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     val context = LocalContext.current
     var player by remember(lecture.id) { mutableStateOf<MediaPlayer?>(null) }
     var deleting by rememberSaveable(lecture.id) { mutableStateOf(false) }
+    var showSegments by rememberSaveable(lecture.id) { mutableStateOf(false) }
     DisposableEffect(lecture.id) { onDispose { player?.release() } }
     val play: (Long) -> Unit = { time ->
         player?.release(); player = null
@@ -48,7 +49,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         } }
         when (tab) {
             "notes" -> item { LectureNotes(lecture) { vm.notes(lecture.id, it) } }
-            "text" -> transcriptPanel(data.transcript, data.job, processing, WhisperModel.ready(context), study.running,
+            "text" -> transcriptPanel(data.transcript, data.job, processing, WhisperModel.ready(context), study.running, showSegments, { showSegments = !showSegments },
                 download = { process("download") }, transcribe = { process("transcribe") }, cancel = { process("cancel") }, play = play)
             else -> item { StudyPanel(tab, data.materials, data.transcript.isNotEmpty(), processing.running || study.running, study, generate) }
         }
