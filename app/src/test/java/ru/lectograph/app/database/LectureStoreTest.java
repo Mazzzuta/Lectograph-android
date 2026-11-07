@@ -7,6 +7,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import static org.junit.Assert.*;
+import android.database.sqlite.SQLiteDatabase;
+import ru.lectograph.app.models.TranscriptSegment;
+import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 34)
@@ -38,5 +41,23 @@ public class LectureStoreTest {
         catch (IllegalArgumentException expected) { }
         assertEquals("Запись", store.get(id).title());
         store.close();
+    }
+    @Test public void versionOneMigratesWithoutLosingNotesOrAudio() {
+        getContext().deleteDatabase("lectograph.db");
+        try (SQLiteDatabase db = getContext().openOrCreateDatabase("lectograph.db", 0, null)) {
+            db.execSQL("CREATE TABLE subjects (name TEXT PRIMARY KEY NOT NULL)");
+            db.execSQL("CREATE TABLE lectures (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, subject TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '', audio TEXT NOT NULL, created INTEGER NOT NULL, duration INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL)");
+            db.execSQL("INSERT INTO lectures(title,notes,audio,created,status) VALUES('Лекция','Мои заметки','original.m4a',1,'recorded')");
+            db.setVersion(1);
+        }
+        try (LectureStore store = new LectureStore(getContext())) {
+            assertEquals("Мои заметки", store.get(1).notes()); assertEquals("original.m4a", store.get(1).audio());
+            var text = List.of(new TranscriptSegment(1000, 2000, "Первый фрагмент"));
+            store.saveTranscript(1, text);
+            store.setJob(1, "running", 30, ""); store.recoverTranscriptions();
+            assertEquals("interrupted", store.job(1).status());
+            assertEquals(text, store.transcript(1));
+            store.delete(1); assertTrue(store.transcript(1).isEmpty()); assertEquals("idle", store.job(1).status());
+        }
     }
 }
