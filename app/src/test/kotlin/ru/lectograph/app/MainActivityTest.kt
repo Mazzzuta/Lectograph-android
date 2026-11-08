@@ -39,7 +39,7 @@ class MainActivityTest {
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(5)
     }
     @Test fun subjectsHaveOwnNavigationAndRecordingControlsAreSeparate() {
-        compose.onNodeWithText("● Начать запись").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Начать запись").assertDoesNotExist()
         compose.onNodeWithContentDescription("Добавить предмет").performClick()
         compose.onNodeWithText("Название предмета").performTextInput("Астрономия")
         compose.onNodeWithText("Сохранить").performClick()
@@ -55,7 +55,7 @@ class MainActivityTest {
         compose.onNodeWithText("Удалить предмет").performClick()
         compose.waitUntil(5000) { compose.onAllNodesWithText("Космос").fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithText("Запись", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("● Начать запись").assertExists()
+        compose.onNodeWithContentDescription("Начать запись").assertExists()
     }
     @Test fun notesPersistWhenReturningToLibrary() {
         open("Заметки")
@@ -81,8 +81,8 @@ class MainActivityTest {
     @Test fun editingDraftPreservesLatestNotes() {
         open("Заметки")
         compose.onNodeWithText("Мои заметки").performScrollTo().performTextInput("Моя заметка")
-        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Изменить название и предмет"))
-        compose.onNodeWithText("Изменить название и предмет").performClick()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasContentDescription("Изменить название и предмет"))
+        compose.onNodeWithContentDescription("Изменить название и предмет").performClick()
         compose.onNodeWithText("Название лекции").performTextClearance()
         compose.onNodeWithText("Название лекции").performTextInput("Законы Ньютона")
         compose.onNodeWithText("Предмет (пусто — черновик)").performTextInput("Физика")

@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import ru.lectograph.app.ui.components.*
+import ru.lectograph.app.R
+import androidx.compose.ui.res.painterResource
 import ru.lectograph.app.utils.LectureFormat
 import ru.lectograph.app.viewmodels.LibraryState
 import ru.lectograph.app.viewmodels.LecturesViewModel
@@ -28,8 +30,8 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         if (subject.isNotEmpty()) item { TextButton({ vm.openSubject("") }) { Text("← Предметы") } }
         item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) { Heading(if (drafts) "Черновики" else subject.ifEmpty { "Предметы" }) }
-            if (listSubjects) IconButton(newSubject, Modifier.semantics { contentDescription = "Добавить предмет" }) { Text("+", style = MaterialTheme.typography.headlineMedium) }
-            else if (!drafts) IconButton(editSubject, Modifier.semantics { contentDescription = "Редактировать предмет" }) { Text("✎", style = MaterialTheme.typography.headlineMedium) }
+            if (listSubjects) IconButton(newSubject, Modifier.semantics { contentDescription = "Добавить предмет" }) { Icon(painterResource(R.drawable.nav_add), null) }
+            else if (!drafts) IconButton(editSubject, Modifier.semantics { contentDescription = "Редактировать предмет" }) { Icon(painterResource(R.drawable.nav_edit), null) }
         } }
         if (listSubjects) {
             item { Text("${data.subjects.size} предметов · удерживайте предмет для удаления", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }

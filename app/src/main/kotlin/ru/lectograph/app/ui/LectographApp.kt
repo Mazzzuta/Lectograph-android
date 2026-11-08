@@ -5,6 +5,9 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.res.painterResource
+import ru.lectograph.app.R
 import androidx.activity.compose.BackHandler
 import ru.lectograph.app.ui.components.*
 import androidx.compose.runtime.*
@@ -67,7 +70,13 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                         item { GlassCard {
                             Text("Диктофон", style = MaterialTheme.typography.titleLarge)
                             Text("Запись продолжится при выключенном экране.")
-                            GlassButton("● Начать запись", primary = true) { record("", "") }
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                FilledIconButton({ record("", "") }, Modifier.size(88.dp), shape = CircleShape,
+                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+                                    Icon(painterResource(R.drawable.nav_record), "Начать запись", Modifier.size(36.dp))
+                                }
+                            }
+                            Text("Начать запись в черновик", style = MaterialTheme.typography.bodySmall)
                             TextButton({ dialog = "record" }) { Text("Указать название и предмет") }
                         } }
                     }

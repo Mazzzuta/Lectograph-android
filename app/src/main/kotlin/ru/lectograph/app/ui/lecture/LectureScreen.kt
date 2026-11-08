@@ -1,6 +1,8 @@
 package ru.lectograph.app.ui.lecture
 
 import android.media.MediaPlayer
+import ru.lectograph.app.R
+import androidx.compose.ui.res.painterResource
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
@@ -39,10 +41,14 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     }
     val tabs = listOf("text" to "Текст", "summary" to "Конспект", "review" to "Разбор", "notes" to "Заметки", "test" to "Тест")
     Page {
-        item { GlassButton("← Назад", onClick = vm::closeLecture) }
+        item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            IconButton(vm::closeLecture) { Icon(painterResource(R.drawable.nav_back), "Назад") }
+            Row {
+                IconButton(edit) { Icon(painterResource(R.drawable.nav_edit), "Изменить название и предмет") }
+                IconButton({ exporting = true }, enabled = data.transcript.isNotEmpty()) { Icon(painterResource(R.drawable.nav_export), "Экспорт в DOCX") }
+            }
+        } }
         item { Heading(lecture.title, "${lecture.subject.ifEmpty { "ЧЕРНОВИК" }} · ${LectureFormat.date(lecture.created)} · ${LectureFormat.time(lecture.duration)}") }
-        item { GlassButton("Экспорт в DOCX", enabled = data.transcript.isNotEmpty()) { exporting = true } }
-        item { GlassButton("Изменить название и предмет", onClick = edit) }
         item { GlassButton(if (player == null) "▶ Прослушать запись" else "■ Остановить воспроизведение") {
             if (player != null) { player?.release(); player = null } else play(0)
         } }
