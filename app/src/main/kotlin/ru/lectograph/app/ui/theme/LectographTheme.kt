@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 fun LectographTheme(choice: String, content: @Composable () -> Unit) {
     val dark = choice == "dark" || choice == "system" && isSystemInDarkTheme()
     val scheme = if (dark) darkColorScheme(
-        primary = Color(0xFFF5F6F7), onPrimary = Color(0xFF17191C), background = Color(0xFF101214),
+        primary = Color(0xFFF5F6F7), onPrimary = Color(0xFF17191C), background = Color(0xFF030405),
         surface = Color(0xFF23262A), onSurface = Color(0xFFFAFAFA), onSurfaceVariant = Color(0xFFC1C4C9)
     ) else lightColorScheme(primary = Color(0xFF272A30), onPrimary = Color.White, background = Color(0xFFF5F0E5), surface = Color(0xFFE8E1D4))
     MaterialTheme(colorScheme = scheme, content = content)
