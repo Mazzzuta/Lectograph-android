@@ -52,7 +52,7 @@ class MainActivityTest {
         compose.onNodeWithText("Название предмета").performTextInput("Космос")
         compose.onNodeWithText("Сохранить").performClick()
         compose.waitUntil(5000) { compose.onAllNodesWithText("Космос").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("← Предметы").performClick()
+        compose.onNodeWithContentDescription("Назад").performClick()
         compose.onNodeWithText("Космос").performTouchInput { longClick() }
         compose.onNodeWithText("Удалить предмет").performClick()
         compose.waitUntil(5000) { compose.onAllNodesWithText("Космос").fetchSemanticsNodes().isEmpty() }

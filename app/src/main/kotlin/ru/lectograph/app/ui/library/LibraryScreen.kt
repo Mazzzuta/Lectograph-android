@@ -27,7 +27,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     val lectures = data.lectures.filter { (if (drafts) it.subject.isEmpty() else it.subject == subject) &&
         (it.title + " " + it.notes).contains(query, ignoreCase = true) }
     Page {
-        if (subject.isNotEmpty()) item { TextButton({ vm.openSubject("") }) { Text("← Предметы") } }
+        if (subject.isNotEmpty()) item { IconButton({ vm.openSubject("") }) { Icon(painterResource(R.drawable.nav_back), "Назад") } }
         item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) { Heading(if (drafts) "Черновики" else subject.ifEmpty { "Предметы" }) }
             if (listSubjects) IconButton(newSubject, Modifier.semantics { contentDescription = "Добавить предмет" }) { Icon(painterResource(R.drawable.nav_add), null) }
