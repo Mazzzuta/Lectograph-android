@@ -39,6 +39,8 @@ class MainActivityTest {
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(5)
     }
     @Test fun subjectsHaveOwnNavigationAndRecordingControlsAreSeparate() {
+        compose.onNodeWithContentDescription("Начать запись").assertIsDisplayed()
+        compose.onNodeWithText("Предметы").performClick()
         compose.onNodeWithContentDescription("Начать запись").assertDoesNotExist()
         compose.onNodeWithContentDescription("Добавить предмет").performClick()
         compose.onNodeWithText("Название предмета").performTextInput("Астрономия")

@@ -57,7 +57,9 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     LectographTheme(theme) {
         val background = MaterialTheme.colorScheme.background
         Surface(color = background) {
-            Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(background, MaterialTheme.colorScheme.surface, background))).safeDrawingPadding().imePadding()) {
+            Box(Modifier.fillMaxSize()) {
+                GlassBackdrop()
+                Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
                 Box(Modifier.fillMaxSize().padding(bottom = dockPadding)) {
                 when {
                     section == "record" && recording.id != -1L -> RecordingScreen(data.lectures.firstOrNull { it.id == recording.id }, recording,
@@ -86,6 +88,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                 }
                 Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { dockHeight = it.height }.padding(horizontal = 22.dp, vertical = 16.dp)) { BottomNavigation(section, vm::navigate) }
             }
+        }
         }
         if (dialog.isNotEmpty()) LectureDialog(dialog, if (dialog == "renameSubject") subject else if (dialog == "edit") lecture?.title.orEmpty() else "", if (dialog == "edit") lecture?.subject.orEmpty() else "", data.subjects,
             dismiss = { dialog = "" }, submit = { title, name -> when (dialog) {

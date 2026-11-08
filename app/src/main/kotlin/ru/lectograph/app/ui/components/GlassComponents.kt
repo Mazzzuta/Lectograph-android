@@ -8,6 +8,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -23,12 +28,43 @@ import androidx.compose.ui.unit.sp
         if (subtitle.isNotEmpty()) Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
-@Composable fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val light = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-    Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f), border = BorderStroke(1.dp, light)) {
-        Column(Modifier.background(Brush.linearGradient(listOf(light, Color.Transparent))).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+@Composable fun GlassSurface(modifier: Modifier = Modifier, radius: Dp = 24.dp, content: @Composable () -> Unit) {
+    val shape = RoundedCornerShape(radius)
+    val scheme = MaterialTheme.colorScheme
+    val dark = scheme.background.red < 0.5f
+    val rim = if (dark) Color.White else Color(0xFF706A60)
+    // Layered optical highlights keep the effect available on Android 8+, without a blur of the text.
+    Box(modifier.shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
+        .clip(shape).background(scheme.surface.copy(alpha = if (dark) 0.58f else 0.72f))
+        .drawWithCache {
+            val sheen = Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) 0.17f else 0.5f), Color.White.copy(alpha = 0.015f), rim.copy(alpha = 0.06f)),
+                start = Offset.Zero, end = Offset(size.width * 0.8f, size.height))
+            val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.10f), Color.Transparent),
+                center = Offset(size.width * 0.9f, size.height * 1.25f), radius = size.width * 0.8f)
+            onDrawBehind { drawRect(sheen); drawRect(glow) }
+        }.border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = 0.4f), rim.copy(alpha = 0.055f), rim.copy(alpha = 0.2f)))), shape)) {
+        content()
     }
 }
+
+@Composable fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    GlassSurface(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+    }
+}
+
+@Composable fun GlassBackdrop() {
+    val scheme = MaterialTheme.colorScheme
+    val dark = scheme.background.red < 0.5f
+    Box(Modifier.fillMaxSize().background(scheme.background).drawWithCache {
+        val upper = Brush.radialGradient(listOf(scheme.onSurface.copy(alpha = if (dark) 0.15f else 0.07f), Color.Transparent),
+            center = Offset(size.width * 1.05f, size.height * 0.12f), radius = size.width * 1.1f)
+        val lower = Brush.radialGradient(listOf(Color(0xFF8B9FA8).copy(alpha = if (dark) 0.14f else 0.12f), Color.Transparent),
+            center = Offset(-size.width * 0.3f, size.height * 0.75f), radius = size.width * 1.2f)
+        onDrawBehind { drawRect(upper); drawRect(lower) }
+    })
+}
+
 @Composable fun GlassButton(text: String, enabled: Boolean = true, primary: Boolean = false, onClick: () -> Unit) {
     if (!primary) {
         OutlinedButton(onClick, Modifier.heightIn(min = 48.dp), enabled = enabled, shape = RoundedCornerShape(14.dp),

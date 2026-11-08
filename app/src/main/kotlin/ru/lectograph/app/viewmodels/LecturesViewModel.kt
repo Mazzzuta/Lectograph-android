@@ -31,7 +31,7 @@ class LecturesViewModel(application: Application, private val saved: SavedStateH
     private val preferences = application.getSharedPreferences("MainActivity", Context.MODE_PRIVATE)
     private val mutableLibrary = MutableStateFlow(LibraryState())
     val library = mutableLibrary.asStateFlow()
-    val section = saved.getStateFlow("section", "library")
+    val section = saved.getStateFlow("section", "record")
     val subject = saved.getStateFlow("subject", "")
     val selected = saved.getStateFlow("lecture", -1L)
     val tab = saved.getStateFlow("tab", "text")
