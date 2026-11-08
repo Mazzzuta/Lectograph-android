@@ -1,0 +1,77 @@
+package ru.lectograph.app.ui.components
+
+import android.graphics.RuntimeShader
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.Dp
+
+// The glass refracts the shared procedural wallpaper; foreground text is drawn separately.
+internal const val LIQUID_SHADER = """
+uniform float2 screen;
+uniform float2 origin;
+uniform float2 bounds;
+uniform float radius;
+uniform float glass;
+uniform float light;
+float3 scene(float2 p) {
+    float2 uv = p / screen;
+    float wave = uv.x + 0.16*sin(uv.y*7.0);
+    float a = exp(-pow((wave-0.78)*3.2,2.0)-pow((uv.y-0.18)*2.3,2.0));
+    float b = exp(-pow((wave-0.08)*3.4,2.0)-pow((uv.y-0.65)*2.6,2.0));
+    float c = exp(-pow((uv.x-0.9)*3.8,2.0)-pow((uv.y-0.94)*3.5,2.0));
+    float ribbon = exp(-pow((wave-0.48)*18.0,2.0))*0.14;
+    float3 dark = float3(0.025,0.035,0.085) + a*float3(0.23,0.12,0.48) + b*float3(0.015,0.33,0.35) + c*float3(0.34,0.08,0.22) + ribbon*float3(0.2,0.5,0.65);
+    return mix(dark, float3(0.91,0.94,0.98)-a*float3(0.12,0.18,0.02)-b*float3(0.18,0.04,0.06), light);
+}
+float sd(float2 p) {
+    float2 q = abs(p-bounds*0.5)-(bounds*0.5-float2(radius));
+    return length(max(q,0.0))+min(max(q.x,q.y),0.0)-radius;
+}
+half4 main(float2 p) {
+    if (glass < 0.5) return half4(scene(p+origin),1.0);
+    float d = sd(p);
+    float2 n = normalize(float2(sd(p+float2(0.5,0.0))-sd(p-float2(0.5,0.0)),sd(p+float2(0.0,0.5))-sd(p-float2(0.0,0.5)))+float2(0.0001));
+    float edge = exp(-max(-d,0.0)/max(radius*0.65,1.0));
+    float2 samplePos = origin + p - n*edge*radius*0.85;
+    float3 col = scene(samplePos);
+    col = mix(col, mix(float3(0.12,0.17,0.23),float3(1.0),light),0.16);
+    float spec = pow(max(dot(n,normalize(float2(-0.5,-0.8))),0.0),5.0);
+    col += edge*(0.055+0.23*spec);
+    col += exp(-abs(d+1.2)*1.4)*(0.15+0.3*spec);
+    col += float3(0.035,0.055,0.075)*edge*max(n.y,0.0);
+    return half4(clamp(col,0.0,1.0),1.0);
+}
+"""
+
+internal fun Modifier.liquidLayer(radius: Dp, glass: Boolean): Modifier = composed {
+    if (Build.VERSION.SDK_INT < 33) return@composed this
+    LiquidLayer(this, radius, glass)
+}
+
+@RequiresApi(33)
+@Composable private fun LiquidLayer(modifier: Modifier, radius: Dp, glass: Boolean): Modifier {
+    val view = LocalView.current
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    val shader = remember { RuntimeShader(LIQUID_SHADER) }
+    val light = if (MaterialTheme.colorScheme.background.red > 0.5f) 1f else 0f
+    return modifier.onGloballyPositioned { origin = it.positionInRoot() }.drawWithCache {
+        shader.setFloatUniform("screen", view.width.toFloat().coerceAtLeast(1f), view.height.toFloat().coerceAtLeast(1f))
+        shader.setFloatUniform("origin", origin.x, origin.y)
+        shader.setFloatUniform("bounds", size.width, size.height)
+        shader.setFloatUniform("radius", radius.toPx().coerceAtMost(size.minDimension/2f))
+        shader.setFloatUniform("glass", if (glass) 1f else 0f)
+        shader.setFloatUniform("light", light)
+        val brush = ShaderBrush(shader)
+        onDrawBehind { drawRect(brush) }
+    }
+}
