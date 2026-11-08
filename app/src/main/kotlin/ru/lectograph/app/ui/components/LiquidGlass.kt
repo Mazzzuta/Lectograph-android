@@ -30,7 +30,7 @@ float3 scene(float2 p) {
     float b = exp(-pow((wave-0.08)*3.4,2.0)-pow((uv.y-0.65)*2.6,2.0));
     float c = exp(-pow((uv.x-0.9)*3.8,2.0)-pow((uv.y-0.94)*3.5,2.0));
     float ribbon = exp(-pow((wave-0.48)*18.0,2.0))*0.14;
-    float3 dark = float3(0.025,0.035,0.085) + a*float3(0.23,0.12,0.48) + b*float3(0.015,0.33,0.35) + c*float3(0.34,0.08,0.22) + ribbon*float3(0.2,0.5,0.65);
+    float3 dark = float3(0.025,0.028,0.032) + a*float3(0.14,0.145,0.155) + b*float3(0.10,0.11,0.12) + c*float3(0.075,0.08,0.09) + ribbon*float3(0.24,0.25,0.27);
     return mix(dark, float3(0.91,0.94,0.98)-a*float3(0.12,0.18,0.02)-b*float3(0.18,0.04,0.06), light);
 }
 float sd(float2 p) {
@@ -44,7 +44,7 @@ half4 main(float2 p) {
     float edge = exp(-max(-d,0.0)/max(radius*0.65,1.0));
     float2 samplePos = origin + p - n*edge*radius*0.48;
     float3 col = scene(samplePos);
-    col = mix(col, mix(float3(0.12,0.17,0.23),float3(1.0),light),0.16);
+    col = mix(col, mix(float3(0.13,0.14,0.15),float3(1.0),light),0.16);
     // Broad lights in screen coordinates avoid repeating a sharp highlight on every corner.
     float2 world = (origin+p)/screen;
     float angle = -0.65 + 0.45*sin(world.y*3.0 + bounds.x/screen.x);
@@ -55,7 +55,7 @@ half4 main(float2 p) {
     float softEdge = exp(-max(-d,0.0)/max(radius*1.1,1.0));
     col += softEdge*(0.012 + 0.045*spec*pool);
     col += rim*(0.035 + 0.075*spec*pool);
-    col += float3(0.012,0.022,0.028)*edge*max(n.y,0.0);
+    col += float3(0.018,0.020,0.023)*edge*max(n.y,0.0);
     return half4(clamp(col,0.0,1.0),1.0);
 }
 """

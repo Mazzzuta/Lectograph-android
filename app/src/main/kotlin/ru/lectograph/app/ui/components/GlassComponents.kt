@@ -59,7 +59,7 @@ import androidx.compose.ui.unit.sp
     Box(Modifier.fillMaxSize().background(scheme.background).drawWithCache {
         val upper = Brush.radialGradient(listOf(scheme.onSurface.copy(alpha = if (dark) 0.15f else 0.07f), Color.Transparent),
             center = Offset(size.width * 1.05f, size.height * 0.12f), radius = size.width * 1.1f)
-        val lower = Brush.radialGradient(listOf(Color(0xFF40C9CB).copy(alpha = if (dark) 0.30f else 0.12f), Color.Transparent),
+        val lower = Brush.radialGradient(listOf(Color(0xFF969DA6).copy(alpha = if (dark) 0.30f else 0.12f), Color.Transparent),
             center = Offset(-size.width * 0.3f, size.height * 0.75f), radius = size.width * 1.2f)
         onDrawBehind { drawRect(upper); drawRect(lower) }
     }.liquidLayer(0.dp, false))
