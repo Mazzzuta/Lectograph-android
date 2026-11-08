@@ -10,7 +10,8 @@ import java.util.UUID
 import ru.lectograph.app.BuildConfig
 
 object GeminiClient {
-    fun configured() = BuildConfig.API_BASE_URL.isNotEmpty()
+    // ИИ временно отключён до выбора провайдера.
+    fun configured() = false
     fun request(context: Context, action: String, text: String, question: String): String {
         if (!configured()) throw IOException("РЎРµСЂРІРµСЂ РѕР±СЂР°Р±РѕС‚РєРё РїРѕРєР° РЅРµ РїРѕРґРєР»СЋС‡С‘РЅ.")
         val preferences = context.getSharedPreferences("installation", 0)
