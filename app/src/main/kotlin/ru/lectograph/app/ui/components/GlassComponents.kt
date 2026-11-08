@@ -37,12 +37,12 @@ import androidx.compose.ui.unit.sp
     Box(modifier.shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
         .clip(shape).background(scheme.surface.copy(alpha = if (dark) 0.58f else 0.72f))
         .drawWithCache {
-            val sheen = Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) 0.17f else 0.5f), Color.White.copy(alpha = 0.015f), rim.copy(alpha = 0.06f)),
+            val sheen = Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) 0.08f else 0.25f), Color.White.copy(alpha = 0.015f), rim.copy(alpha = 0.06f)),
                 start = Offset.Zero, end = Offset(size.width * 0.8f, size.height))
-            val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.10f), Color.Transparent),
+            val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.9f, size.height * 1.25f), radius = size.width * 0.8f)
             onDrawBehind { drawRect(sheen); drawRect(glow) }
-        }.liquidLayer(radius, true).border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = 0.4f), rim.copy(alpha = 0.055f), rim.copy(alpha = 0.2f)))), shape)) {
+        }.liquidLayer(radius, true).border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = 0.18f), rim.copy(alpha = 0.04f), rim.copy(alpha = 0.10f)))), shape)) {
         content()
     }
 }

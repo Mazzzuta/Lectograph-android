@@ -42,13 +42,20 @@ half4 main(float2 p) {
     float d = sd(p);
     float2 n = normalize(float2(sd(p+float2(0.5,0.0))-sd(p-float2(0.5,0.0)),sd(p+float2(0.0,0.5))-sd(p-float2(0.0,0.5)))+float2(0.0001));
     float edge = exp(-max(-d,0.0)/max(radius*0.65,1.0));
-    float2 samplePos = origin + p - n*edge*radius*0.85;
+    float2 samplePos = origin + p - n*edge*radius*0.48;
     float3 col = scene(samplePos);
     col = mix(col, mix(float3(0.12,0.17,0.23),float3(1.0),light),0.16);
-    float spec = pow(max(dot(n,normalize(float2(-0.5,-0.8))),0.0),5.0);
-    col += edge*(0.055+0.23*spec);
-    col += exp(-abs(d+1.2)*1.4)*(0.15+0.3*spec);
-    col += float3(0.035,0.055,0.075)*edge*max(n.y,0.0);
+    // Broad lights in screen coordinates avoid repeating a sharp highlight on every corner.
+    float2 world = (origin+p)/screen;
+    float angle = -0.65 + 0.45*sin(world.y*3.0 + bounds.x/screen.x);
+    float2 direction = normalize(float2(sin(angle),-cos(angle)));
+    float spec = pow(max(dot(n,direction),0.0),2.0);
+    float pool = 0.55 + 0.45*sin(world.x*4.0+world.y*2.5);
+    float rim = exp(-abs(d+0.8)*0.85);
+    float softEdge = exp(-max(-d,0.0)/max(radius*1.1,1.0));
+    col += softEdge*(0.012 + 0.045*spec*pool);
+    col += rim*(0.035 + 0.075*spec*pool);
+    col += float3(0.012,0.022,0.028)*edge*max(n.y,0.0);
     return half4(clamp(col,0.0,1.0),1.0);
 }
 """
