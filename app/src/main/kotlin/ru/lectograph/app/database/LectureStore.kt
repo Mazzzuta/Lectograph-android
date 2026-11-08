@@ -56,6 +56,19 @@ class LectureStore(context: Context) : SQLiteOpenHelper(context, "lectograph.db"
         require(name.isNotBlank()) { "Укажите предмет" }
         writableDatabase.insertWithOnConflict("subjects", null, ContentValues().apply { put("name", name.trim()) }, SQLiteDatabase.CONFLICT_IGNORE)
     }
+    fun renameSubject(old: String, name: String) = transaction { db ->
+        val value = name.trim()
+        require(value.isNotEmpty()) { "Укажите предмет" }
+        if (old != value) {
+            require(value !in subjects()) { "Предмет с таким названием уже существует" }
+            check(db.update("subjects", ContentValues().apply { put("name", value) }, "name=?", arrayOf(old)) == 1) { "Предмет не найден" }
+            db.update("lectures", ContentValues().apply { put("subject", value) }, "subject=?", arrayOf(old))
+        }
+    }
+    fun deleteSubject(name: String) = transaction { db ->
+        db.update("lectures", ContentValues().apply { put("subject", "") }, "subject=?", arrayOf(name))
+        db.delete("subjects", "name=?", arrayOf(name))
+    }
     fun subjects(): List<String> = readableDatabase.rawQuery("SELECT name FROM subjects ORDER BY name COLLATE NOCASE", null).use { cursor ->
         buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }
     }

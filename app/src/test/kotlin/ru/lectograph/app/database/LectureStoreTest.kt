@@ -13,6 +13,26 @@ import ru.lectograph.app.models.TranscriptSegment
 @Config(sdk = [34])
 class LectureStoreTest {
     private val context: Context get() = RuntimeEnvironment.getApplication()
+    @Test fun subjectRenameAndRemovalPreserveLectureData() {
+        context.deleteDatabase("lectograph.db")
+        LectureStore(context).use { store ->
+            store.addSubject("Физика")
+            val id = store.create("Законы", "Физика", "keep.m4a")
+            store.edit(id, "Законы", "Физика", "Личная заметка")
+            store.saveTranscript(id, listOf(TranscriptSegment(0, 1000, "Сила")))
+            store.renameSubject("Физика", "Механика")
+            assertEquals(listOf("Механика"), store.subjects())
+            assertEquals("Механика", store.get(id)?.subject)
+            store.addSubject("История")
+            assertThrows(IllegalArgumentException::class.java) { store.renameSubject("Механика", "История") }
+            assertEquals("Механика", store.get(id)?.subject)
+            store.deleteSubject("Механика")
+            assertEquals("", store.get(id)?.subject)
+            assertEquals("keep.m4a", store.get(id)?.audio)
+            assertEquals("Личная заметка", store.get(id)?.notes)
+            assertEquals("Сила", store.transcript(id).single().text)
+        }
+    }
     @Test fun draftSurvivesReopenAndMovesToSubject() {
         context.deleteDatabase("lectograph.db")
         val id = LectureStore(context).use {

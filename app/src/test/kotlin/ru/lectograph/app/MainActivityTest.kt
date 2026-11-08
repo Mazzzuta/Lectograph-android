@@ -38,10 +38,29 @@ class MainActivityTest {
         compose.onNodeWithText(tab).performScrollTo().performClick()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(5)
     }
+    @Test fun subjectsHaveOwnNavigationAndRecordingControlsAreSeparate() {
+        compose.onNodeWithText("● Начать запись").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Добавить предмет").performClick()
+        compose.onNodeWithText("Название предмета").performTextInput("Астрономия")
+        compose.onNodeWithText("Сохранить").performClick()
+        compose.waitUntil(5000) { compose.onAllNodesWithText("Астрономия").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Астрономия").performClick()
+        compose.onNodeWithContentDescription("Редактировать предмет").performClick()
+        compose.onNodeWithText("Название предмета").performTextClearance()
+        compose.onNodeWithText("Название предмета").performTextInput("Космос")
+        compose.onNodeWithText("Сохранить").performClick()
+        compose.waitUntil(5000) { compose.onAllNodesWithText("Космос").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("← Предметы").performClick()
+        compose.onNodeWithText("Космос").performTouchInput { longClick() }
+        compose.onNodeWithText("Удалить предмет").performClick()
+        compose.waitUntil(5000) { compose.onAllNodesWithText("Космос").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithText("Запись", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("● Начать запись").assertExists()
+    }
     @Test fun notesPersistWhenReturningToLibrary() {
         open("Заметки")
         compose.onNodeWithText("Мои заметки").performScrollTo().performTextInput("Проверить определение")
-        compose.onNodeWithText("Библиотека").performClick()
+        compose.onNodeWithText("Предметы").performClick()
         compose.waitUntil(5000) { LectureStore(compose.activity).use { it.get(id)?.notes == "Проверить определение" } }
     }
     @Test fun transcriptIsContinuousByDefaultAndTimedFragmentsRemainAvailable() {

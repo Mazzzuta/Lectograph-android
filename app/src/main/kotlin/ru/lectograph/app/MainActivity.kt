@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun startRecording(title: String, subject: String) {
         if (RecordingService.activeId != -1L) return
+        vm.navigate("record")
         pendingTitle = title; pendingSubject = subject
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             val requests = mutableListOf(Manifest.permission.RECORD_AUDIO)

@@ -11,13 +11,14 @@ import androidx.compose.ui.unit.dp
 
 @Composable fun LectureDialog(mode: String, initialTitle: String, initialSubject: String, subjects: List<String>,
     dismiss: () -> Unit, submit: (String, String) -> Unit) {
+    val subjectMode = mode == "subject" || mode == "renameSubject"
     var title by rememberSaveable(mode) { mutableStateOf(initialTitle) }
     var subject by rememberSaveable(mode) { mutableStateOf(initialSubject) }
     var invalid by rememberSaveable(mode) { mutableStateOf(false) }
-    AlertDialog(onDismissRequest = dismiss, title = { Text(when (mode) { "record" -> "Новая запись"; "subject" -> "Новый предмет"; else -> "Оформить лекцию" }) }, text = {
+    AlertDialog(onDismissRequest = dismiss, title = { Text(when (mode) { "record" -> "Новая запись"; "subject" -> "Новый предмет"; "renameSubject" -> "Изменить предмет"; else -> "Оформить лекцию" }) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(title, { title = it }, label = { Text(if (mode == "subject") "Название предмета" else "Название лекции") }, isError = invalid && title.isBlank(), singleLine = true)
-            if (mode != "subject") {
+            OutlinedTextField(title, { title = it }, label = { Text(if (subjectMode) "Название предмета" else "Название лекции") }, isError = invalid && title.isBlank(), singleLine = true)
+            if (!subjectMode) {
                 OutlinedTextField(subject, { subject = it }, label = { Text("Предмет (пусто — черновик)") }, isError = invalid && mode == "record" && subject.isBlank(), singleLine = true)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     subjects.forEach { name -> SuggestionChip({ subject = name }, label = { Text(name) }) }

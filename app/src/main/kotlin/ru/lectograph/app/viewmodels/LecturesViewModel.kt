@@ -64,7 +64,7 @@ class LecturesViewModel(application: Application, private val saved: SavedStateH
     }
     fun refresh() { viewModelScope.launch { reload() } }
     fun navigate(destination: String) { saved["section"] = destination; saved["subject"] = ""; saved["lecture"] = -1L }
-    fun openSubject(name: String) { saved["subject"] = name }
+    fun openSubject(name: String) { saved["section"] = "library"; saved["subject"] = name; saved["lecture"] = -1L }
     fun openLecture(id: Long) {
         if (selected.value != id) saved["tab"] = "text"
         saved["lecture"] = id
@@ -79,6 +79,14 @@ class LecturesViewModel(application: Application, private val saved: SavedStateH
         catch (e: Exception) { mutableLibrary.update { it.copy(error = e.message ?: "Не удалось сохранить изменения") } }
     } }
     fun addSubject(name: String) = write { store.addSubject(name) }
+    fun renameSubject(old: String, name: String) = write {
+        store.renameSubject(old, name)
+        viewModelScope.launch(Dispatchers.Main) { if (subject.value == old) saved["subject"] = name.trim() }
+    }
+    fun deleteSubject(name: String) = write {
+        store.deleteSubject(name)
+        viewModelScope.launch(Dispatchers.Main) { if (subject.value == name) saved["subject"] = "" }
+    }
     fun edit(id: Long, title: String, subject: String) = write {
         val current = store.get(id) ?: return@write
         store.edit(id, title, subject, current.notes)

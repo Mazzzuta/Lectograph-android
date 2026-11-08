@@ -5,6 +5,8 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.activity.compose.BackHandler
+import ru.lectograph.app.ui.components.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -48,28 +50,39 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         try { if (foreground) context.startForegroundService(intent) else context.startService(intent) }
         catch (_: RuntimeException) { Toast.makeText(context, "Не удалось запустить обработку", Toast.LENGTH_LONG).show() }
     }
+    BackHandler(enabled = selected != -1L || subject.isNotEmpty()) { if (selected != -1L) vm.closeLecture() else vm.openSubject("") }
     LectographTheme(theme) {
         val background = MaterialTheme.colorScheme.background
         Surface(color = background) {
             Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(background, MaterialTheme.colorScheme.surface, background))).safeDrawingPadding().imePadding()) {
                 Box(Modifier.fillMaxSize().padding(bottom = dockPadding)) {
                 when {
-                    recording.id != -1L -> RecordingScreen(data.lectures.firstOrNull { it.id == recording.id }, recording,
+                    section == "record" && recording.id != -1L -> RecordingScreen(data.lectures.firstOrNull { it.id == recording.id }, recording,
                         control = { service(Intent(context, RecordingService::class.java).setAction(it), false) }, notes = { vm.notes(recording.id, it) })
                     lecture != null -> LectureScreen(lecture, data, tab, processing, study, vm, edit = { dialog = "edit" },
                         process = { action -> service(Intent(context, TranscriptionService::class.java).setAction(action).putExtra("lecture", lecture.id), action != "cancel") },
                         generate = { action, question -> service(Intent(context, StudyService::class.java).putExtra("action", action).putExtra("lecture", lecture.id).putExtra("question", question)) })
+                    section == "record" -> Page {
+                        item { Heading("Запись", "Новая лекция или быстрая запись в черновики") }
+                        item { GlassCard {
+                            Text("Диктофон", style = MaterialTheme.typography.titleLarge)
+                            Text("Запись продолжится при выключенном экране.")
+                            GlassButton("● Начать запись", primary = true) { record("", "") }
+                            TextButton({ dialog = "record" }) { Text("Указать название и предмет") }
+                        } }
+                    }
                     section == "settings" -> SettingsScreen(theme, vm::theme)
-                    else -> LibraryScreen(data, section == "drafts", subject, vm, { record("", "") }, { dialog = "record" }, { dialog = "subject" })
+                    else -> LibraryScreen(data, section == "drafts", subject, vm, { dialog = "subject" }, { dialog = "renameSubject" })
                 }
                 }
                 Box(Modifier.align(Alignment.BottomCenter).onSizeChanged { dockHeight = it.height }.padding(horizontal = 22.dp, vertical = 16.dp)) { BottomNavigation(section, vm::navigate) }
             }
         }
-        if (dialog.isNotEmpty()) LectureDialog(dialog, if (dialog == "edit") lecture?.title.orEmpty() else "", if (dialog == "edit") lecture?.subject.orEmpty() else "", data.subjects,
+        if (dialog.isNotEmpty()) LectureDialog(dialog, if (dialog == "renameSubject") subject else if (dialog == "edit") lecture?.title.orEmpty() else "", if (dialog == "edit") lecture?.subject.orEmpty() else "", data.subjects,
             dismiss = { dialog = "" }, submit = { title, name -> when (dialog) {
                 "record" -> record(title, name)
                 "subject" -> vm.addSubject(title)
+                "renameSubject" -> vm.renameSubject(subject, title)
                 "edit" -> lecture?.let { vm.edit(it.id, title, name) }
             } })
     }

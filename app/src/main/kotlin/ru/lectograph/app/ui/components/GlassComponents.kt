@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.sp
     }
 }
 @Composable fun GlassButton(text: String, enabled: Boolean = true, primary: Boolean = false, onClick: () -> Unit) {
-    Button(onClick, Modifier.fillMaxWidth().heightIn(min = 56.dp), enabled = enabled, shape = RoundedCornerShape(26.dp),
+    Button(onClick, Modifier.heightIn(min = 48.dp), enabled = enabled, shape = RoundedCornerShape(26.dp),
         colors = ButtonDefaults.buttonColors(containerColor = if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
             contentColor = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)), contentPadding = PaddingValues(18.dp)) { Text(text) }
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) { Text(text) }
 }
