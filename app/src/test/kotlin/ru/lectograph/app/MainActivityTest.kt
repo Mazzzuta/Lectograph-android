@@ -38,6 +38,13 @@ class MainActivityTest {
         compose.onNodeWithText(tab).performScrollTo().performClick()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(5)
     }
+    @Test fun swipesMoveBetweenMainTabsInBothDirections() {
+        compose.onNode(hasText("Запись") and isSelected()).assertExists()
+        compose.onRoot().performTouchInput { swipeLeft() }
+        compose.onNode(hasText("Предметы") and isSelected()).assertExists()
+        compose.onRoot().performTouchInput { swipeRight() }
+        compose.onNode(hasText("Запись") and isSelected()).assertExists()
+    }
     @Test fun subjectsHaveOwnNavigationAndRecordingControlsAreSeparate() {
         compose.onNodeWithContentDescription("Начать запись").assertIsDisplayed()
         compose.onNodeWithText("Предметы").performClick()

@@ -3,6 +3,9 @@ package ru.lectograph.app.ui
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,7 +14,9 @@ import ru.lectograph.app.R
 import androidx.activity.compose.BackHandler
 import ru.lectograph.app.ui.components.*
 import androidx.compose.runtime.*
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.*
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -50,11 +55,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     var dialog by rememberSaveable { mutableStateOf("") }
     val lecture = data.lectures.firstOrNull { it.id == selected }
     var dockHeight by remember { mutableIntStateOf(0) }
-    val entrance = remember { Animatable(1f) }
-    LaunchedEffect(section, selected, subject) {
-        entrance.snapTo(0f)
-        entrance.animateTo(1f, tween(220))
-    }
+    val swipeThreshold = with(LocalDensity.current) { (LocalConfiguration.current.screenWidthDp * 0.22f).dp.toPx() }
     val dockPadding = with(LocalDensity.current) { dockHeight.toDp() }
     LaunchedEffect(data.error, recording.error) { (data.error ?: recording.error)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() } }
     fun service(intent: Intent, foreground: Boolean = true) {
@@ -68,10 +69,39 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
             Box(Modifier.fillMaxSize()) {
                 GlassBackdrop()
                 Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-                Box(Modifier.fillMaxSize().padding(bottom = dockPadding).graphicsLayer {
-                    alpha = entrance.value
-                    translationY = (1f - entrance.value) * 10.dp.toPx()
-                }) {
+                AnimatedContent(
+                    targetState = Triple(section, subject, selected),
+                    modifier = Modifier.fillMaxSize().padding(bottom = dockPadding).clipToBounds()
+                        .pointerInput(section, selected, subject, swipeThreshold) {
+                            if (selected != -1L || subject.isNotEmpty()) return@pointerInput
+                            var distance = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { distance = 0f },
+                                onDragCancel = { distance = 0f },
+                                onDragEnd = {
+                                    val order = listOf("record", "library", "drafts", "settings")
+                                    val step = when { distance < -swipeThreshold -> 1; distance > swipeThreshold -> -1; else -> 0 }
+                                    val next = order.indexOf(section) + step
+                                    if (step != 0 && next in order.indices) vm.navigate(order[next])
+                                    distance = 0f
+                                },
+                                onHorizontalDrag = { change, amount -> change.consume(); distance += amount }
+                            )
+                        },
+                    transitionSpec = {
+                        val order = listOf("record", "library", "drafts", "settings")
+                        val forward = if (initialState.first != targetState.first) order.indexOf(targetState.first) > order.indexOf(initialState.first)
+                            else if (initialState.third != targetState.third) targetState.third != -1L
+                            else targetState.second.isNotEmpty()
+                        val direction = if (forward) 1 else -1
+                        val easing = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
+                        (slideInHorizontally(tween(360, easing = easing)) { it * direction } togetherWith
+                            slideOutHorizontally(tween(360, easing = easing)) { -it * direction }).using(SizeTransform(clip = false))
+                    }, label = "screenSwipe"
+                ) { destination ->
+                val section = destination.first
+                val subject = destination.second
+                val lecture = data.lectures.firstOrNull { it.id == destination.third }
                 when {
                     section == "record" && recording.id != -1L -> RecordingScreen(data.lectures.firstOrNull { it.id == recording.id }, recording,
                         control = { service(Intent(context, RecordingService::class.java).setAction(it), false) }, notes = { vm.notes(recording.id, it) })

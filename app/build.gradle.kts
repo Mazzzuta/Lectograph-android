@@ -11,8 +11,8 @@ android {
         applicationId = "ru.lectograph.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "0.5.5"
+        versionCode = 14
+        versionName = "0.5.6"
         val apiUrl = providers.gradleProperty("lectographApiUrl").orElse("").get()
         require(apiUrl.isEmpty() || (apiUrl.startsWith("https://") || apiUrl.startsWith("http://")) && !apiUrl.any { it == '\n' || it == '\r' })
         buildConfigField("String", "API_BASE_URL", "\"" + apiUrl.replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
