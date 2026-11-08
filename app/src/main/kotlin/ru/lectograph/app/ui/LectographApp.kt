@@ -11,6 +11,9 @@ import ru.lectograph.app.R
 import androidx.activity.compose.BackHandler
 import ru.lectograph.app.ui.components.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +50,11 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     var dialog by rememberSaveable { mutableStateOf("") }
     val lecture = data.lectures.firstOrNull { it.id == selected }
     var dockHeight by remember { mutableIntStateOf(0) }
+    val entrance = remember { Animatable(1f) }
+    LaunchedEffect(section, selected, subject) {
+        entrance.snapTo(0f)
+        entrance.animateTo(1f, tween(220))
+    }
     val dockPadding = with(LocalDensity.current) { dockHeight.toDp() }
     LaunchedEffect(data.error, recording.error) { (data.error ?: recording.error)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() } }
     fun service(intent: Intent, foreground: Boolean = true) {
@@ -60,7 +68,10 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
             Box(Modifier.fillMaxSize()) {
                 GlassBackdrop()
                 Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-                Box(Modifier.fillMaxSize().padding(bottom = dockPadding)) {
+                Box(Modifier.fillMaxSize().padding(bottom = dockPadding).graphicsLayer {
+                    alpha = entrance.value
+                    translationY = (1f - entrance.value) * 10.dp.toPx()
+                }) {
                 when {
                     section == "record" && recording.id != -1L -> RecordingScreen(data.lectures.firstOrNull { it.id == recording.id }, recording,
                         control = { service(Intent(context, RecordingService::class.java).setAction(it), false) }, notes = { vm.notes(recording.id, it) })
