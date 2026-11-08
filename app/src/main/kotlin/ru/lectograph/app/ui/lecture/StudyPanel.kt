@@ -23,11 +23,10 @@ import ru.lectograph.app.ui.components.*
     var consent by rememberSaveable { mutableStateOf(false) }
     val available = GeminiClient.configured() && !busy && hasText
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (!GeminiClient.configured()) Text("Сервер обработки пока не подключён. Распознавание и сохранённые материалы доступны без него.")
+        if (!GeminiClient.configured()) Text("ИИ-функции появятся позже. Пока доступны запись, распознавание, заметки и экспорт текста.")
         else if (state.message.isNotEmpty()) Text(state.message)
-        GlassButton(if (isTest) "Создать тест · до 10 вопросов" else "Создать конспекты и разбор", available, primary = true) { consent = true }
-        Text(if (isTest) "До 3 новых тестов в сутки. Готовый тест можно проходить без ограничений." else "До 3 обработок лекций в сутки. Открытие готовых материалов не расходует запросы.", style = MaterialTheme.typography.bodySmall)
-        if (data == null) Text("Готовых материалов пока нет. Сначала распознайте запись.")
+        GlassButton(if (isTest) "Создать тест · до 10 вопросов" else "Сократить", available, primary = true) { consent = true }
+        if (data == null) Text("Готовых материалов пока нет. Генерация временно недоступна.")
         else if (isTest) Quiz(data.optJSONArray("questions") ?: JSONArray(), saved)
         else if (tab == "summary") {
             GlassCard { Text("Кратко", style = MaterialTheme.typography.titleLarge); SelectionContainer { Text(data.optString("short")) } }

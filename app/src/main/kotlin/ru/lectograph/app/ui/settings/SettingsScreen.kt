@@ -14,7 +14,7 @@ import ru.lectograph.app.ui.components.*
         }
         item { GlassCard {
             Text("Хранение", style = MaterialTheme.typography.titleLarge)
-            Text("Записи и заметки хранятся на этом устройстве. Аудио распознаётся локально; для конспектов в Gemini отправляется только текст.")
+            Text("Записи и заметки хранятся на этом устройстве. Аудио распознаётся локально. ИИ-функции временно отключены; текст лекций никуда не отправляется.")
             Text("Экспорт и импорт будут добавлены отдельно.")
         } }
         item { Text("Лектограф · ${BuildConfig.VERSION_NAME}", color = MaterialTheme.colorScheme.onSurfaceVariant) }

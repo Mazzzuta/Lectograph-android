@@ -10,7 +10,7 @@ import java.util.UUID
 import ru.lectograph.app.BuildConfig
 
 object GeminiClient {
-    // ИИ временно отключён до выбора провайдера.
+    // AI is paused until a provider is selected.
     fun configured() = false
     fun request(context: Context, action: String, text: String, question: String): String {
         if (!configured()) throw IOException("РЎРµСЂРІРµСЂ РѕР±СЂР°Р±РѕС‚РєРё РїРѕРєР° РЅРµ РїРѕРґРєР»СЋС‡С‘РЅ.")

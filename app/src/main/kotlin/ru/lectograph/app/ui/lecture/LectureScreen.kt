@@ -24,6 +24,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     vm: LecturesViewModel, edit: () -> Unit, process: (String) -> Unit, generate: (String, String) -> Unit) {
     val context = LocalContext.current
     var player by remember(lecture.id) { mutableStateOf<MediaPlayer?>(null) }
+    var exporting by rememberSaveable(lecture.id) { mutableStateOf(false) }
     var deleting by rememberSaveable(lecture.id) { mutableStateOf(false) }
     var showSegments by rememberSaveable(lecture.id) { mutableStateOf(false) }
     DisposableEffect(lecture.id) { onDispose { player?.release() } }
@@ -40,6 +41,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     Page {
         item { GlassButton("← Назад", onClick = vm::closeLecture) }
         item { Heading(lecture.title, "${lecture.subject.ifEmpty { "ЧЕРНОВИК" }} · ${LectureFormat.date(lecture.created)} · ${LectureFormat.time(lecture.duration)}") }
+        item { GlassButton("Экспорт в DOCX", enabled = data.transcript.isNotEmpty()) { exporting = true } }
         item { GlassButton("Изменить название и предмет", onClick = edit) }
         item { GlassButton(if (player == null) "▶ Прослушать запись" else "■ Остановить воспроизведение") {
             if (player != null) { player?.release(); player = null } else play(0)
@@ -55,6 +57,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         }
         item { GlassButton("Удалить лекцию", enabled = !(processing.running && processing.lectureId == lecture.id) && !(study.running && study.lectureId == lecture.id)) { deleting = true } }
     }
+    if (exporting) ExportDialog(lecture, data.transcript, data.materials) { exporting = false }
     if (deleting) AlertDialog(onDismissRequest = { deleting = false }, title = { Text("Удалить лекцию?") }, text = { Text("Аудио, текст и заметки будут удалены без возможности восстановления.") },
         confirmButton = { TextButton({ player?.release(); player = null; deleting = false; vm.delete(lecture) }) { Text("Удалить") } }, dismissButton = { TextButton({ deleting = false }) { Text("Отмена") } })
 }
