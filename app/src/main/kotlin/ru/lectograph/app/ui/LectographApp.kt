@@ -95,8 +95,8 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                             else targetState.second.isNotEmpty()
                         val direction = if (forward) 1 else -1
                         val easing = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
-                        (slideInHorizontally(tween(360, easing = easing)) { it * direction } togetherWith
-                            slideOutHorizontally(tween(360, easing = easing)) { -it * direction }).using(SizeTransform(clip = false))
+                        (slideInHorizontally(tween(220, easing = easing)) { it * direction } togetherWith
+                            slideOutHorizontally(tween(220, easing = easing)) { -it * direction }).using(SizeTransform(clip = false))
                     }, label = "screenSwipe"
                 ) { destination ->
                 val section = destination.first
