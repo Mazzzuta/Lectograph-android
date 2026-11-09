@@ -38,6 +38,18 @@ class MainActivityTest {
         compose.onNodeWithText(tab).performScrollTo().performClick()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(5)
     }
+    @Test fun addedSubjectRoutesNamedRecordingToThatSubject() {
+        compose.onNodeWithText("Запись сохранится в черновиках").assertExists()
+        compose.onNode(hasText("Название") and hasSetTextAction()).performTextInput("Первая лекция")
+        compose.onNode(hasText("Предмет") and hasSetTextAction()).performTextInput("Биология")
+        compose.onNodeWithText("Запись сохранится в черновиках").assertExists()
+        compose.onNodeWithContentDescription("Добавить предмет").performClick()
+        compose.waitUntil(5000) {
+            compose.onAllNodesWithText("Запись сохранится в предмете «Биология»").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithContentDescription("Добавить предмет").assertIsNotEnabled()
+        LectureStore(compose.activity).use { assertTrue("Биология" in it.subjects()) }
+    }
     @Test fun swipesMoveBetweenMainTabsInBothDirections() {
         compose.onNode(hasText("Запись") and isSelected()).assertExists()
         compose.onRoot().performTouchInput { swipeLeft() }

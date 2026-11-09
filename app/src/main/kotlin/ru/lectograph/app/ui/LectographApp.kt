@@ -37,6 +37,7 @@ import ru.lectograph.app.ui.components.LectureDialog
 import ru.lectograph.app.ui.lecture.LectureScreen
 import ru.lectograph.app.ui.library.LibraryScreen
 import ru.lectograph.app.ui.recording.RecordingScreen
+import ru.lectograph.app.ui.recording.RecordStartScreen
 import ru.lectograph.app.ui.settings.SettingsScreen
 import ru.lectograph.app.ui.theme.LectographTheme
 import ru.lectograph.app.viewmodels.LecturesViewModel
@@ -108,21 +109,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                     lecture != null -> LectureScreen(lecture, data, tab, processing, study, vm, edit = { dialog = "edit" },
                         process = { action -> service(Intent(context, TranscriptionService::class.java).setAction(action).putExtra("lecture", lecture.id), action != "cancel") },
                         generate = { action, question -> service(Intent(context, StudyService::class.java).putExtra("action", action).putExtra("lecture", lecture.id).putExtra("question", question)) })
-                    section == "record" -> Page {
-                        item { Heading("Запись", "Новая лекция или быстрая запись в черновики") }
-                        item { GlassCard {
-                            Text("Диктофон", style = MaterialTheme.typography.titleLarge)
-                            Text("Запись продолжится при выключенном экране.")
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                                FilledIconButton({ record("", "") }, Modifier.size(88.dp), shape = CircleShape,
-                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-                                    Icon(painterResource(R.drawable.nav_record), "Начать запись", Modifier.size(36.dp))
-                                }
-                            }
-                            Text("Начать запись в черновик", style = MaterialTheme.typography.bodySmall)
-                            TextButton({ dialog = "record" }) { Text("Указать название и предмет") }
-                        } }
-                    }
+                    section == "record" -> RecordStartScreen(data.subjects, { vm.addSubject(it) }, record)
                     section == "settings" -> SettingsScreen(theme, vm::theme, vm::refresh)
                     else -> LibraryScreen(data, section == "drafts", subject, vm, { dialog = "subject" }, { dialog = "renameSubject" })
                 }
@@ -133,7 +120,6 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         }
         if (dialog.isNotEmpty()) LectureDialog(dialog, if (dialog == "renameSubject") subject else if (dialog == "edit") lecture?.title.orEmpty() else "", if (dialog == "edit") lecture?.subject.orEmpty() else "", data.subjects,
             dismiss = { dialog = "" }, submit = { title, name -> when (dialog) {
-                "record" -> record(title, name)
                 "subject" -> vm.addSubject(title)
                 "renameSubject" -> vm.renameSubject(subject, title)
                 "edit" -> lecture?.let { vm.edit(it.id, title, name) }
