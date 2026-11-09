@@ -45,6 +45,9 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             IconButton(vm::closeLecture) { Icon(painterResource(R.drawable.nav_back), "Назад") }
             Row {
+                IconButton({ deleting = true }, enabled = !(processing.running && processing.lectureId == lecture.id) && !(study.running && study.lectureId == lecture.id)) {
+                    Icon(painterResource(R.drawable.nav_delete), "Удалить лекцию")
+                }
                 IconButton(edit) { Icon(painterResource(R.drawable.nav_edit), "Изменить название и предмет") }
                 IconButton({ exporting = true }, enabled = data.transcript.isNotEmpty()) { Icon(painterResource(R.drawable.nav_export), "Экспорт в DOCX") }
             }
@@ -62,7 +65,6 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                 hasAudio = hasAudio, download = { process("download") }, transcribe = { process("transcribe") }, cancel = { process("cancel") }, play = play)
             else -> item { StudyPanel(tab, data.materials, data.transcript.isNotEmpty(), processing.running || study.running, study, generate) }
         }
-        item { GlassButton("Удалить лекцию", enabled = !(processing.running && processing.lectureId == lecture.id) && !(study.running && study.lectureId == lecture.id)) { deleting = true } }
     }
     if (exporting) ExportDialog(lecture, data.transcript, data.materials) { exporting = false }
     if (deleting) AlertDialog(onDismissRequest = { deleting = false }, title = { Text("Удалить лекцию?") }, text = { Text("Аудио, текст и заметки будут удалены без возможности восстановления.") },

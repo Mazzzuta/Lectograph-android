@@ -36,7 +36,7 @@ class MainActivityTest {
         compose.onNodeWithText("Проверочная лекция").performClick()
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(4)
         compose.onNodeWithText(tab).performScrollTo().performClick()
-        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(5)
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(4)
     }
     @Test fun addedSubjectRoutesNamedRecordingToThatSubject() {
         compose.onNodeWithText("Запись сохранится в черновиках").assertExists()
