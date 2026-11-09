@@ -10,6 +10,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import ru.lectograph.app.ui.components.glassSurface
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -23,6 +28,8 @@ fun RecordStartScreen(subjects: List<String>, addSubject: (String) -> Unit, reco
     var title by rememberSaveable { mutableStateOf("") }
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var fieldWidth by remember { mutableIntStateOf(0) }
+    val menuWidth = with(LocalDensity.current) { fieldWidth.toDp() }
     val focus = LocalFocusManager.current
     val name = query.trim()
     val selectedSubject = subjects.firstOrNull { it.equals(name, ignoreCase = true) }
@@ -31,7 +38,7 @@ fun RecordStartScreen(subjects: List<String>, addSubject: (String) -> Unit, reco
     val destination = selectedSubject.orEmpty().takeIf { title.isNotBlank() }.orEmpty()
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val top = (maxHeight * 0.40f - 58.dp).coerceAtLeast(16.dp)
+        val top = (maxHeight * 0.40f - 72.dp).coerceAtLeast(16.dp)
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.height(top))
@@ -39,9 +46,9 @@ fun RecordStartScreen(subjects: List<String>, addSubject: (String) -> Unit, reco
                 expanded = false
                 focus.clearFocus()
                 record(title.trim(), destination)
-            }, modifier = Modifier.size(116.dp), shape = CircleShape,
+            }, modifier = Modifier.size(144.dp), shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-                Icon(painterResource(R.drawable.nav_record), "Начать запись", Modifier.size(46.dp))
+                Icon(painterResource(R.drawable.nav_record), "Начать запись", Modifier.size(56.dp))
             }
             Spacer(Modifier.height(20.dp))
             OutlinedTextField(title, { title = it }, Modifier.fillMaxWidth(), label = { Text("Название") }, singleLine = true)
@@ -49,12 +56,14 @@ fun RecordStartScreen(subjects: List<String>, addSubject: (String) -> Unit, reco
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {
                     OutlinedTextField(query, { query = it; expanded = true },
-                        Modifier.fillMaxWidth().onFocusChanged { expanded = it.isFocused },
+                        Modifier.fillMaxWidth().onSizeChanged { fieldWidth = it.width }.onFocusChanged { expanded = it.isFocused },
                         label = { Text("Предмет") }, placeholder = { Text("Поиск предмета") }, singleLine = true,
                         trailingIcon = { IconButton({ expanded = !expanded }) {
                             Text(if (expanded) "▴" else "▾", style = MaterialTheme.typography.titleMedium)
                         } })
-                    DropdownMenu(expanded, { expanded = false }, Modifier.heightIn(max = 256.dp),
+                    DropdownMenu(expanded, { expanded = false }, Modifier.width(menuWidth).heightIn(max = 256.dp).glassSurface(20.dp),
+                        shape = RoundedCornerShape(20.dp), containerColor = Color.Transparent,
+                        tonalElevation = 0.dp, shadowElevation = 0.dp,
                         properties = PopupProperties(focusable = false)) {
                         if (matches.isEmpty()) {
                             DropdownMenuItem(text = { Text("Предметы не найдены") }, onClick = {}, enabled = false)

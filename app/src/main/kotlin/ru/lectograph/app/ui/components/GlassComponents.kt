@@ -29,12 +29,16 @@ import androidx.compose.ui.unit.sp
     }
 }
 @Composable fun GlassSurface(modifier: Modifier = Modifier, radius: Dp = 24.dp, content: @Composable () -> Unit) {
+    Box(modifier.glassSurface(radius)) { content() }
+}
+
+@Composable internal fun Modifier.glassSurface(radius: Dp): Modifier {
     val shape = RoundedCornerShape(radius)
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.background.red < 0.5f
     val rim = if (dark) Color.White else Color(0xFF303641)
     // Layered optical highlights keep the effect available on Android 8+, without a blur of the text.
-    Box(modifier.shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
+    return shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
         .clip(shape).background(scheme.surface.copy(alpha = if (dark) 0.58f else 0.72f))
         .drawWithCache {
             val sheen = Brush.linearGradient(listOf(Color.White.copy(alpha = if (dark) 0.08f else 0.25f), Color.White.copy(alpha = 0.015f), rim.copy(alpha = 0.06f)),
@@ -42,9 +46,7 @@ import androidx.compose.ui.unit.sp
             val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.9f, size.height * 1.25f), radius = size.width * 0.8f)
             onDrawBehind { drawRect(sheen); drawRect(glow) }
-        }.liquidLayer(radius, true).border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = if (dark) 0.18f else 0.42f), rim.copy(alpha = if (dark) 0.04f else 0.18f), rim.copy(alpha = if (dark) 0.10f else 0.30f)))), shape)) {
-        content()
-    }
+        }.liquidLayer(radius, true).border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = if (dark) 0.18f else 0.42f), rim.copy(alpha = if (dark) 0.04f else 0.18f), rim.copy(alpha = if (dark) 0.10f else 0.30f)))), shape)
 }
 
 @Composable fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
