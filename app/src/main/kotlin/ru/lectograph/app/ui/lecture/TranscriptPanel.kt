@@ -14,7 +14,7 @@ import ru.lectograph.app.utils.LectureFormat
 
 fun LazyListScope.transcriptPanel(segments: List<TranscriptSegment>, job: LectureStore.Job, state: ProcessingStatus,
     modelReady: Boolean, aiBusy: Boolean, showSegments: Boolean, toggleSegments: () -> Unit,
-    download: () -> Unit, transcribe: () -> Unit, cancel: () -> Unit, play: (Long) -> Unit) {
+    hasAudio: Boolean = true, download: () -> Unit, transcribe: () -> Unit, cancel: () -> Unit, play: (Long) -> Unit) {
     item { Heading("Полный текст") }
     if (state.running) item { GlassCard {
         Text("${state.message} · ${state.progress}%")
@@ -23,7 +23,8 @@ fun LazyListScope.transcriptPanel(segments: List<TranscriptSegment>, job: Lectur
     } }
     else if (job.error.isNotEmpty()) item { Text(job.error, color = MaterialTheme.colorScheme.error) }
     else if (state.message.isNotEmpty()) item { Text(state.message, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    if (!modelReady) {
+    if (!hasAudio) item { Text("Аудио не включено в резервную копию. Текст и материалы доступны без записи.") }
+    else if (!modelReady) {
         item { Text("Один раз скачайте Whisper base — 148 МБ. Затем аудио распознаётся на телефоне без интернета. Язык — русский.") }
         item { GlassButton("Скачать Whisper base · 148 МБ", !state.running && !aiBusy, primary = true, onClick = download) }
     } else item { GlassButton(if (job.status == "done") "Распознать повторно" else "Распознать запись", !state.running && !aiBusy, primary = true, onClick = transcribe) }
@@ -32,7 +33,7 @@ fun LazyListScope.transcriptPanel(segments: List<TranscriptSegment>, job: Lectur
         item { Text("Текст распознан автоматически. Для сверки с аудио откройте фрагменты с таймингами.", style = MaterialTheme.typography.bodySmall) }
         item { GlassButton(if (showSegments) "Показать цельный текст" else "Показать фрагменты с таймингами", onClick = toggleSegments) }
         if (showSegments) items(segments) { segment -> GlassCard {
-            TextButton({ play(segment.startMs) }) { Text(LectureFormat.time(segment.startMs)) }
+            TextButton({ play(segment.startMs) }, enabled = hasAudio) { Text(LectureFormat.time(segment.startMs)) }
             SelectionContainer { Text(segment.text) }
         } }
         else item { GlassCard {

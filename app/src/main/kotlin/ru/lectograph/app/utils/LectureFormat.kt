@@ -11,6 +11,7 @@ object LectureFormat {
     }
     fun date(value: Long): String = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).format(Date(value))
     fun status(value: String): String = when (value) {
+        "imported" -> "Импортировано · без аудио"
         "recording" -> "Идёт запись"
         "recorded" -> "Аудио сохранено"
         "interrupted" -> "Запись прервана — проверьте аудио"

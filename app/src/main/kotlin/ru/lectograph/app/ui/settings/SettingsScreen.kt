@@ -25,12 +25,13 @@ import java.util.Locale
 internal fun storageBytes(directory: File): Long = directory.walkTopDown().filter { it.isFile }.sumOf { it.length() }
 private fun sizeLabel(bytes: Long) = String.format(Locale.getDefault(), "%.1f МБ", bytes / (1024.0 * 1024.0))
 
-@Composable fun SettingsScreen(theme: String, choose: (String) -> Unit) {
+@Composable fun SettingsScreen(theme: String, choose: (String) -> Unit, restored: () -> Unit = {}) {
     val context = LocalContext.current
     val recording by RecordingService.state.collectAsStateWithLifecycle()
     val processing by TranscriptionService.state.collectAsStateWithLifecycle()
     val study by StudyService.state.collectAsStateWithLifecycle()
-    val busy = recording.id != -1L || processing.running || study.running
+    var backupBusy by remember { mutableStateOf(false) }
+    val busy = backupBusy || recording.id != -1L || processing.running || study.running
     var confirming by rememberSaveable { mutableStateOf(false) }
     var storage by remember { mutableStateOf<Map<String, Long>?>(null) }
     var storageError by remember { mutableStateOf(false) }
@@ -49,7 +50,7 @@ private fun sizeLabel(bytes: Long) = String.format(Locale.getDefault(), "%.1f М
         item { Heading("Настройки") }
         item { GlassCard {
             Text("Цветовая схема", style = MaterialTheme.typography.titleMedium)
-            listOf("system" to "Как в системе", "dark" to "Графитовая", "light" to "Светлая · цвет кости").forEach { (key, title) ->
+            listOf("system" to "Как в системе", "dark" to "Графитовая", "light" to "Светлая").forEach { (key, title) ->
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(theme == key, role = Role.RadioButton, onClick = { choose(key) }),
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     RadioButton(theme == key, onClick = null); Text(title)
@@ -67,13 +68,29 @@ private fun sizeLabel(bytes: Long) = String.format(Locale.getDefault(), "%.1f М
             Text("Размеры приблизительные. Аудио распознаётся на телефоне. ИИ-функции временно отключены.", style = MaterialTheme.typography.bodySmall)
             Text("Лекцию можно сохранить или отправить в DOCX из её подробного просмотра.", style = MaterialTheme.typography.bodySmall)
         } }
+        item { BackupPanel(busy, { backupBusy = it }, restored) }
         item { GlassCard {
             Text("Удаление данных", style = MaterialTheme.typography.titleMedium)
             Text("Удаляет лекции, предметы, заметки, модель Whisper и настройки с этого устройства.", style = MaterialTheme.typography.bodySmall)
             TextButton({ confirming = true }, enabled = !busy) { Text("Удалить все данные", color = MaterialTheme.colorScheme.error) }
             if (busy) Text("Сначала завершите запись и обработку.", style = MaterialTheme.typography.bodySmall)
         } }
-        item { Text("Лектограф · ${BuildConfig.VERSION_NAME}", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { GlassCard {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Лектограф", style = MaterialTheme.typography.titleMedium)
+                    Text("Версия приложения", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.26f))) {
+                    Text(BuildConfig.VERSION_NAME, Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        } }
     }
     if (confirming) AlertDialog(onDismissRequest = { confirming = false }, title = { Text("Удалить все данные приложения?") },
         text = { Text("Это действие нельзя отменить. Будут удалены все лекции, аудио, тексты, заметки, предметы и модель распознавания. Приложение закроется. Документы, сохранённые вами вне приложения, останутся.") },

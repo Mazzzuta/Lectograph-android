@@ -99,7 +99,7 @@ class LecturesViewModel(application: Application, private val saved: SavedStateH
     fun delete(lecture: Lecture) = write {
         check(!(TranscriptionService.running && TranscriptionService.lectureId == lecture.id) && !(StudyService.running && StudyService.lectureId == lecture.id)) { "Сначала дождитесь окончания обработки" }
         val file = File(File(getApplication<Application>().filesDir, "audio"), lecture.audio)
-        check(!file.exists() || file.delete()) { "Не удалось удалить аудиофайл" }
+        check(lecture.audio.isEmpty() || !file.exists() || file.delete()) { "Не удалось удалить аудиофайл" }
         store.delete(lecture.id)
         viewModelScope.launch(Dispatchers.Main) { if (selected.value == lecture.id) closeLecture() }
     }

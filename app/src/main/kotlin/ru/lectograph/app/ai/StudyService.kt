@@ -22,6 +22,7 @@ class StudyService : Service() {
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (ru.lectograph.app.backup.BackupArchive.busy) { if (!running) stopSelf(); return START_NOT_STICKY }
         if (intent == null) { stopSelf(); return START_NOT_STICKY }
         if (running) return START_NOT_STICKY
         val action = intent.getStringExtra("action") ?: run { stopSelf(); return START_NOT_STICKY }

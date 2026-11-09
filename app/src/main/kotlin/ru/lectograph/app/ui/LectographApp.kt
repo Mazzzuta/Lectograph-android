@@ -123,7 +123,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                             TextButton({ dialog = "record" }) { Text("Указать название и предмет") }
                         } }
                     }
-                    section == "settings" -> SettingsScreen(theme, vm::theme)
+                    section == "settings" -> SettingsScreen(theme, vm::theme, vm::refresh)
                     else -> LibraryScreen(data, section == "drafts", subject, vm, { dialog = "subject" }, { dialog = "renameSubject" })
                 }
                 }

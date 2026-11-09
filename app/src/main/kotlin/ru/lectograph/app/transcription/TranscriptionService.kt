@@ -34,6 +34,7 @@ class TranscriptionService : Service() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(NotificationChannel("transcription", "Распознавание лекций", NotificationManager.IMPORTANCE_LOW))
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (ru.lectograph.app.backup.BackupArchive.busy) { if (!running) stopSelf(); return START_NOT_STICKY }
         if (intent == null) { stopSelf(); return START_NOT_STICKY }
         if (intent.action == "cancel") { cancel(); if (!running) stopSelf(); return START_NOT_STICKY }
         if (running) return START_NOT_STICKY

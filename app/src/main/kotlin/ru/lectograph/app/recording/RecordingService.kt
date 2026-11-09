@@ -36,6 +36,7 @@ class RecordingService : Service() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(NotificationChannel("recording", "Запись лекций", NotificationManager.IMPORTANCE_LOW))
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (ru.lectograph.app.backup.BackupArchive.busy) { if (activeId == -1L) stopSelf(); return START_NOT_STICKY }
         if (intent == null) { stopSelf(); return START_NOT_STICKY }
         when (intent.action) {
             "stop" -> { finish(); return START_NOT_STICKY }

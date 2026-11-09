@@ -39,6 +39,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
             media.setOnCompletionListener { it.release(); if (player == it) player = null }; media.start()
         } catch (_: Exception) { player?.release(); player = null; Toast.makeText(context, "Аудиофайл недоступен или повреждён", Toast.LENGTH_LONG).show() }
     }
+    val hasAudio = lecture.audio.isNotEmpty() && File(File(context.filesDir, "audio"), lecture.audio).isFile
     val tabs = listOf("text" to "Текст", "summary" to "Конспект", "review" to "Разбор", "notes" to "Заметки", "test" to "Тест")
     Page {
         item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -49,7 +50,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
             }
         } }
         item { Heading(lecture.title, "${lecture.subject.ifEmpty { "ЧЕРНОВИК" }} · ${LectureFormat.date(lecture.created)} · ${LectureFormat.time(lecture.duration)}") }
-        item { GlassButton(if (player == null) "▶ Прослушать запись" else "■ Остановить воспроизведение") {
+        item { GlassButton(if (player == null) "▶ Прослушать запись" else "■ Остановить воспроизведение", enabled = hasAudio) {
             if (player != null) { player?.release(); player = null } else play(0)
         } }
         item { ScrollableTabRow(tabs.indexOfFirst { it.first == tab }.coerceAtLeast(0), containerColor = androidx.compose.ui.graphics.Color.Transparent, edgePadding = androidx.compose.ui.unit.Dp(0f)) {
@@ -58,7 +59,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
         when (tab) {
             "notes" -> item { LectureNotes(lecture) { vm.notes(lecture.id, it) } }
             "text" -> transcriptPanel(data.transcript, data.job, processing, WhisperModel.ready(context), study.running, showSegments, { showSegments = !showSegments },
-                download = { process("download") }, transcribe = { process("transcribe") }, cancel = { process("cancel") }, play = play)
+                hasAudio = hasAudio, download = { process("download") }, transcribe = { process("transcribe") }, cancel = { process("cancel") }, play = play)
             else -> item { StudyPanel(tab, data.materials, data.transcript.isNotEmpty(), processing.running || study.running, study, generate) }
         }
         item { GlassButton("Удалить лекцию", enabled = !(processing.running && processing.lectureId == lecture.id) && !(study.running && study.lectureId == lecture.id)) { deleting = true } }

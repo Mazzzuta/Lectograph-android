@@ -106,6 +106,29 @@ class LectureStore(context: Context) : SQLiteOpenHelper(context, "lectograph.db"
         check(get(id) != null && transcriptText(id) == sourceText) { "Текст лекции изменился. Запросите обработку повторно." }
         db.insertWithOnConflict("lecture_materials", null, ContentValues().apply { put("lecture_id", id); put("kind", kind); put("json", json) }, SQLiteDatabase.CONFLICT_REPLACE)
     }
+    fun backup(): ru.lectograph.app.backup.BackupArchive.Archive {
+        var result: ru.lectograph.app.backup.BackupArchive.Archive? = null
+        transaction {
+            result = ru.lectograph.app.backup.BackupArchive.Archive(subjects(), all().map { lecture ->
+                ru.lectograph.app.backup.BackupArchive.Entry(lecture.title, lecture.subject, lecture.notes, lecture.created, lecture.duration,
+                    transcript(lecture.id), listOf("study", "test", "question").associateWith { material(lecture.id, it) })
+            })
+        }
+        return requireNotNull(result)
+    }
+    fun restore(archive: ru.lectograph.app.backup.BackupArchive.Archive) = transaction { db ->
+        ru.lectograph.app.backup.BackupArchive.encode(archive) // Validate everything before replacing any rows.
+        listOf("transcripts", "transcription_jobs", "lecture_materials", "lectures", "subjects").forEach { db.delete(it, null, null) }
+        archive.subjects.forEach(::addSubject)
+        archive.lectures.forEach { entry ->
+            val id = db.insertOrThrow("lectures", null, ContentValues().apply {
+                put("title", entry.title); put("subject", entry.subject); put("notes", entry.notes); put("audio", "")
+                put("created", entry.created); put("duration", entry.duration); put("status", "imported")
+            })
+            saveTranscript(id, entry.segments)
+            entry.materials.forEach { (kind, json) -> saveMaterial(id, kind, json, transcriptText(id)) }
+        }
+    }
     fun delete(id: Long) = transaction { db ->
         val args = arrayOf(id.toString())
         db.delete("transcripts", "lecture_id=?", args); db.delete("transcription_jobs", "lecture_id=?", args)
