@@ -9,9 +9,8 @@ import java.net.URI
 import java.util.UUID
 import ru.lectograph.app.BuildConfig
 
-object GeminiClient {
-    // AI is paused until a provider is selected.
-    fun configured() = false
+object StudyClient {
+    fun configured() = BuildConfig.API_BASE_URL.isNotBlank()
     fun request(context: Context, action: String, text: String, question: String): String {
         if (!configured()) throw IOException("Сервер обработки пока не подключён.")
         val preferences = context.getSharedPreferences("installation", 0)

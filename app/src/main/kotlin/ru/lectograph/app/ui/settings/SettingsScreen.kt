@@ -65,7 +65,7 @@ private fun sizeLabel(bytes: Long) = String.format(Locale.getDefault(), "%.1f М
                 Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
                 Text(sizeLabel(bytes), style = MaterialTheme.typography.bodySmall)
             } }
-            Text("Размеры приблизительные. Аудио распознаётся на телефоне. ИИ-функции временно отключены.", style = MaterialTheme.typography.bodySmall)
+            Text("Размеры приблизительные. Аудио распознаётся на телефоне. Конспекты и тесты создаёт подключённый сервер обработки.", style = MaterialTheme.typography.bodySmall)
             Text("Лекцию можно сохранить или отправить в DOCX из её подробного просмотра.", style = MaterialTheme.typography.bodySmall)
         } }
         item { BackupPanel(busy, { backupBusy = it }, restored) }

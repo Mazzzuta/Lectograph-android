@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { gigaChatProvider } from './gigachat.js';
 import { Quota } from './quota.js';
 import { ApiError, generate, validateInput } from './gemini.js';
 
@@ -19,7 +20,7 @@ export function createServer({ quota, key, model, provider = generate }) {
     const controller = new AbortController();
     res.on('close', () => { if (!res.writableEnded) controller.abort(); });
     try {
-      if (!key || !model) throw new ApiError(503, 'Сервер Gemini ещё не настроен.');
+      if (!key || !model) throw new ApiError(503, 'Сервер обработки ещё не настроен.');
       if (busy) throw new ApiError(429, 'Сервер обрабатывает другую лекцию. Повторите позже.');
       const installation = req.headers['x-installation-id'];
       if (typeof installation !== 'string' || !/^[a-f0-9-]{36}$/i.test(installation)) throw new ApiError(400, 'Некорректный идентификатор установки.');
@@ -61,7 +62,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     dailyRequests: integer('DAILY_REQUESTS', 50), dailyTokens: integer('DAILY_TOKEN_BUDGET', 500000),
     minuteRequests: integer('MINUTE_REQUESTS', 3), minuteTokens: integer('MINUTE_TOKEN_BUDGET', 250000),
   });
-  const server = createServer({ quota, key: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL });
+  const gigaKey = process.env.GIGACHAT_AUTH_KEY?.trim();
+  const server = createServer(gigaKey ? {
+    quota, key: gigaKey, model: process.env.GIGACHAT_MODEL || 'GigaChat-2-Pro',
+    provider: gigaChatProvider({ scope: process.env.GIGACHAT_SCOPE }),
+  } : { quota, key: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL });
   server.listen(integer('PORT', 8787), process.env.HOST ?? '127.0.0.1', () => console.log('Lectograph API started'));
   process.on('SIGTERM', () => server.close(() => { quota.close(); process.exit(0); }));
 }

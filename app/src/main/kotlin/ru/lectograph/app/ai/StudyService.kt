@@ -29,7 +29,7 @@ class StudyService : Service() {
         if (action !in listOf("study", "test", "question")) { stopSelf(); return START_NOT_STICKY }
         val id = intent.getLongExtra("lecture", -1)
         if (TranscriptionService.running && TranscriptionService.lectureId == id) { stopSelf(); return START_NOT_STICKY }
-        mutableState.value = StudyStatus(true, id, "Обработка через Gemini…")
+        mutableState.value = StudyStatus(true, id, "Обработка лекции…")
         getSystemService(NotificationManager::class.java).createNotificationChannel(NotificationChannel("study", "Обработка конспектов", NotificationManager.IMPORTANCE_LOW))
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val notification = Notification.Builder(this, "study").setSmallIcon(R.drawable.ic_mic).setContentTitle(state.value.message).setContentIntent(open).setOngoing(true).build()
@@ -40,7 +40,7 @@ class StudyService : Service() {
             try {
                 LectureStore(this@StudyService).use { store ->
                     val text = store.transcriptText(id)
-                    val result = GeminiClient.request(this@StudyService, action, text, intent.getStringExtra("question").orEmpty())
+                    val result = StudyClient.request(this@StudyService, action, text, intent.getStringExtra("question").orEmpty())
                     store.saveMaterial(id, action, result, text)
                     mutableState.update { it.copy(message = "Материалы сохранены на устройстве") }
                 }

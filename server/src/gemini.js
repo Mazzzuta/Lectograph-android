@@ -14,7 +14,7 @@ export const schemas = {
   test: object({ questions: array(object({ question: string, options: array(string), correctIndex: { type: 'integer' }, explanation: string, sourceQuote: string })) }),
   question: object({ answer: string, sourceQuote: string }),
 };
-const instructions = {
+export const instructions = {
   study: 'Составь подробный структурированный конспект и краткую версию. В clarifications вынеси неразборчивые места и нераскрытые понятия: не восстанавливай неуслышанное как факт. В studentQuestions выдели только вопросы из текста; question и teacherAnswer цитируй дословно. Если ответа преподавателя нет, teacherAnswer оставь пустым. aiAnswer заполняй только при отсутствии ответа преподавателя и только если ответ следует из лекции; иначе оставь пустым. Не придумывай содержание и вопросы студентов.',
   test: 'Составь до 10 вопросов с четырьмя вариантами и одним правильным ответом (correctIndex от 0 до 3). Каждый ответ должен подтверждаться sourceQuote — точной цитатой из текста. Дай объяснение. Если материала недостаточно, сделай меньше вопросов. Не используй спорные и неразборчивые места.',
   question: 'Ответь на вопрос пользователя только по лекции. sourceQuote должна быть точной цитатой, подтверждающей ответ. Если ответа в лекции нет, явно скажи об этом и оставь sourceQuote пустой. Не выдумывай источники.',
@@ -40,9 +40,9 @@ export function validateResult(action, data, text) {
     return value && typeof value === 'object' && !Array.isArray(value) &&
       Object.keys(value).every(k => k in schema.properties) && schema.required.every(k => check(schema.properties[k], value[k], depth + 1));
   };
-  if (!check(schemas[action], data)) throw new ApiError(502, 'Gemini вернул неполные данные. Попробуйте позже.');
+  if (!check(schemas[action], data)) throw new ApiError(502, 'Модель вернула неполные данные. Попробуйте позже.');
   if (action === 'study' && (data.short.trim().length < 10 || data.detailed.trim().length < 10))
-    throw new ApiError(502, 'Gemini не составил конспект. Попробуйте позже.');
+    throw new ApiError(502, 'Модель не составила конспект. Попробуйте позже.');
   if (action === 'study' && data.studentQuestions.some(q => !normalized(q.question) || !normalized(text).includes(normalized(q.question)) ||
       (q.teacherAnswer && !normalized(text).includes(normalized(q.teacherAnswer)))))
     throw new ApiError(502, 'Не удалось подтвердить вопросы и ответы преподавателя по записи.');

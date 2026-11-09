@@ -11,7 +11,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import org.json.JSONArray
 import org.json.JSONObject
-import ru.lectograph.app.ai.GeminiClient
+import ru.lectograph.app.ai.StudyClient
 import ru.lectograph.app.ai.StudyStatus
 import ru.lectograph.app.ui.components.*
 
@@ -21,9 +21,9 @@ import ru.lectograph.app.ui.components.*
     val saved = materials[if (isTest) "test" else "study"].orEmpty()
     val data = remember(saved) { runCatching { JSONObject(saved) }.getOrNull() }
     var consent by rememberSaveable { mutableStateOf(false) }
-    val available = GeminiClient.configured() && !busy && hasText
+    val available = StudyClient.configured() && !busy && hasText
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (!GeminiClient.configured()) Text("ИИ-функции появятся позже. Пока доступны запись, распознавание, заметки и экспорт текста.")
+        if (!StudyClient.configured()) Text("Подключите сервер обработки, чтобы создавать конспекты и тесты.")
         else if (state.message.isNotEmpty()) Text(state.message)
         GlassButton(if (isTest) "Создать тест · до 10 вопросов" else "Сократить", available, primary = true) { consent = true }
         if (data == null) Text("Готовых материалов пока нет. Генерация временно недоступна.")
@@ -47,6 +47,7 @@ import ru.lectograph.app.ui.components.*
                 Text(if (teacher.isEmpty()) "Ответ преподавателя в записи не найден." else "Ответ преподавателя: $teacher")
                 if (item.optString("aiAnswer").isNotEmpty()) Text("Пояснение ИИ по лекции: ${item.optString("aiAnswer")}", color = MaterialTheme.colorScheme.onSurfaceVariant)
             } }
+            Text("При отправке вопроса подключённый ИИ получит вопрос и текст лекции.")
             var question by rememberSaveable { mutableStateOf("") }
             OutlinedTextField(question, { question = it.take(1000) }, Modifier.fillMaxWidth(), label = { Text("Свой вопрос по лекции · до 1000 символов") })
             GlassButton("Задать вопрос · до 10 в сутки", available && question.isNotBlank()) { generate("question", question) }
@@ -55,8 +56,8 @@ import ru.lectograph.app.ui.components.*
             Text("Интернет-поиск пока не подключён. Пояснения строятся только по лекции.", style = MaterialTheme.typography.bodySmall)
         }
     }
-    if (consent) AlertDialog(onDismissRequest = { consent = false }, title = { Text("Обработать через Gemini?") },
-        text = { Text("Текст этой лекции будет отправлен на сервер и в Gemini. Аудио останется на телефоне. На бесплатном уровне Gemini данные могут использоваться для улучшения сервисов Google.") },
+    if (consent) AlertDialog(onDismissRequest = { consent = false }, title = { Text("Отправить текст на обработку?") },
+        text = { Text("Текст лекции будет отправлен на сервер приложения и подключённому ИИ. Аудио останется на телефоне.") },
         confirmButton = { TextButton({ consent = false; generate(if (isTest) "test" else "study", "") }) { Text("Отправить текст") } },
         dismissButton = { TextButton({ consent = false }) { Text("Отмена") } })
 }
