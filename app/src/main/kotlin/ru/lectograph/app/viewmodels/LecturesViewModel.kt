@@ -78,6 +78,9 @@ class LecturesViewModel(application: Application, private val saved: SavedStateH
         try { writes.withLock { withContext(Dispatchers.IO) { block() }; reload() } }
         catch (e: Exception) { mutableLibrary.update { it.copy(error = e.message ?: "Не удалось сохранить изменения") } }
     } }
+    suspend fun subjectTests(subject: String): List<Pair<String, String>> = withContext(Dispatchers.IO) {
+        store.all().filter { it.subject == subject }.map { it.title to store.material(it.id, "test") }
+    }
     fun addSubject(name: String) = write { store.addSubject(name) }
     fun renameSubject(old: String, name: String) = write {
         store.renameSubject(old, name)

@@ -61,7 +61,7 @@ import ru.lectograph.app.ui.components.*
         dismissButton = { TextButton({ consent = false }) { Text("Отмена") } })
 }
 
-@Composable private fun Quiz(questions: JSONArray, key: String) {
+@Composable internal fun Quiz(questions: JSONArray, key: String) {
     if (questions.length() == 0) { Text("Недостаточно материала для вопросов."); return }
     val valid = (0 until questions.length()).all {
         val q = questions.optJSONObject(it)
@@ -81,6 +81,9 @@ import ru.lectograph.app.ui.components.*
                 }, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     RadioButton(answers[i] == index, onClick = null); Text(options.getString(index))
                 }
+            }
+            if (checked && answers[i] != question.getInt("correctIndex") && question.has("lectureTitle")) {
+                Text("Повторите лекцию «${question.optString("lectureTitle")}»")
             }
             if (checked) Text((if (answers[i] == question.getInt("correctIndex")) "Верно. " else "Ошибка. ") +
                 question.optString("explanation") + "\nИз лекции: «${question.optString("sourceQuote")}»")

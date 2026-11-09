@@ -1,6 +1,12 @@
 package ru.lectograph.app.ui.library
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
+import org.json.JSONArray
+import org.json.JSONObject
+import ru.lectograph.app.ui.lecture.Quiz
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,6 +29,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
     newSubject: () -> Unit, editSubject: () -> Unit) {
     var query by rememberSaveable(drafts, subject) { mutableStateOf("") }
     var deleting by rememberSaveable { mutableStateOf("") }
+    var showQuiz by rememberSaveable(subject) { mutableStateOf(false) }
     val listSubjects = !drafts && subject.isEmpty()
     val lectures = data.lectures.filter { (if (drafts) it.subject.isEmpty() else it.subject == subject) &&
         (it.title + " " + it.notes).contains(query, ignoreCase = true) }
@@ -43,6 +50,7 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
                 }
             }
         } else {
+            if (!drafts) item { GlassButton("Пройти общий тест") { showQuiz = true } }
             item { Text(if (drafts) "Записи без предмета" else "Лекции · ${lectures.size}", style = MaterialTheme.typography.titleMedium) }
             item { OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text("Поиск по названию и заметкам") }, singleLine = true) }
             if (lectures.isEmpty()) item { Text("Лекций пока нет. Новую запись можно начать во вкладке «Запись».", color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -55,8 +63,52 @@ import ru.lectograph.app.viewmodels.LecturesViewModel
             }
         }
     }
+    if (showQuiz) {
+        var questions by remember(subject) { mutableStateOf<JSONArray?>(null) }
+        var failed by remember(subject) { mutableStateOf(false) }
+        LaunchedEffect(subject) {
+            try {
+                questions = collectSubjectQuestions(vm.subjectTests(subject))
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                failed = true
+            }
+        }
+        AlertDialog(onDismissRequest = { showQuiz = false }, title = { Text("Общий тест · $subject") },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    val ready = questions
+                    when {
+                        failed -> Text("Не удалось загрузить вопросы.")
+                        ready == null -> Text("Загрузка вопросов…")
+                        ready.length() == 0 -> Text("У лекций этого предмета пока нет сохранённых тестов.")
+                        else -> Quiz(ready, ready.toString())
+                    }
+                }
+            },
+            confirmButton = { TextButton({ showQuiz = false }) { Text("Закрыть") } })
+    }
     if (deleting.isNotEmpty()) AlertDialog(onDismissRequest = { deleting = "" }, title = { Text("Удалить предмет «$deleting»?") },
         text = { Text("Лекции, аудио и заметки сохранятся в черновиках.") },
         confirmButton = { TextButton({ vm.deleteSubject(deleting); deleting = "" }) { Text("Удалить предмет") } },
         dismissButton = { TextButton({ deleting = "" }) { Text("Отмена") } })
+}
+
+
+internal fun collectSubjectQuestions(tests: List<Pair<String, String>>): JSONArray {
+    val result = JSONArray()
+    for ((title, json) in tests) {
+        val questions = runCatching { JSONObject(json).getJSONArray("questions") }.getOrNull() ?: continue
+        for (i in 0 until questions.length()) {
+            val question = questions.optJSONObject(i) ?: continue
+            val options = question.optJSONArray("options") ?: continue
+            if (question.optString("question").isBlank() || options.length() != 4 ||
+                (0..3).any { options.opt(it) !is String } || question.optInt("correctIndex", -1) !in 0..3) continue
+            result.put(question.put("lectureTitle", title))
+            // shortcut: limit each attempt to 30 questions until the quiz uses a lazy list.
+            if (result.length() == 30) return result
+        }
+    }
+    return result
 }

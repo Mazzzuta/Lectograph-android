@@ -7,11 +7,25 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import ru.lectograph.app.backup.BackupArchive
+import ru.lectograph.app.ui.library.collectSubjectQuestions
 import ru.lectograph.app.models.TranscriptSegment
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class BackupTest {
+    @Test fun subjectQuizKeepsSourcesAndSkipsInvalidQuestions() {
+        val valid = """{"questions":[{"question":"Что такое сила?","options":["А","Б","В","Г"],"correctIndex":0}]}"""
+        val result = collectSubjectQuestions(listOf(
+            "Повреждённый тест" to "bad",
+            "Ошибочный вопрос" to valid.replace("\"correctIndex\":0", "\"correctIndex\":4"),
+            "Механика" to valid,
+            "Динамика" to valid
+        ))
+        assertEquals(2, result.length())
+        assertEquals("Механика", result.getJSONObject(0).getString("lectureTitle"))
+        assertEquals("Динамика", result.getJSONObject(1).getString("lectureTitle"))
+        assertEquals(30, collectSubjectQuestions(List(35) { "Лекция $it" to valid }).length())
+    }
     @Test fun roundTripPreservesTextNotesEmptySubjectsAndMaterialsWithoutAudio() {
         val context = RuntimeEnvironment.getApplication()
         context.deleteDatabase("lectograph.db")
