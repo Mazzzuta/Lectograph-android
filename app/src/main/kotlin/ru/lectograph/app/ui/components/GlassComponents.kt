@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
     val shape = RoundedCornerShape(radius)
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.background.red < 0.5f
-    val rim = if (dark) Color.White else Color(0xFF706A60)
+    val rim = if (dark) Color.White else Color(0xFF303641)
     // Layered optical highlights keep the effect available on Android 8+, without a blur of the text.
     Box(modifier.shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
         .clip(shape).background(scheme.surface.copy(alpha = if (dark) 0.58f else 0.72f))
@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
             val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.9f, size.height * 1.25f), radius = size.width * 0.8f)
             onDrawBehind { drawRect(sheen); drawRect(glow) }
-        }.liquidLayer(radius, true).border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = 0.18f), rim.copy(alpha = 0.04f), rim.copy(alpha = 0.10f)))), shape)) {
+        }.liquidLayer(radius, true).border(BorderStroke(1.dp, Brush.linearGradient(listOf(rim.copy(alpha = if (dark) 0.18f else 0.42f), rim.copy(alpha = if (dark) 0.04f else 0.18f), rim.copy(alpha = if (dark) 0.10f else 0.30f)))), shape)) {
         content()
     }
 }
@@ -68,11 +68,11 @@ import androidx.compose.ui.unit.sp
 @Composable fun GlassButton(text: String, enabled: Boolean = true, primary: Boolean = false, onClick: () -> Unit) {
     if (!primary) {
         OutlinedButton(onClick, Modifier.heightIn(min = 48.dp), enabled = enabled, shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f))) { Text(text) }
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f))) { Text(text) }
         return
     }
     Button(onClick, Modifier.heightIn(min = 48.dp), enabled = enabled, shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(containerColor = if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
             contentColor = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) { Text(text) }
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) { Text(text) }
 }

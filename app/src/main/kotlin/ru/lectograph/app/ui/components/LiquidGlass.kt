@@ -53,7 +53,9 @@ half4 main(float2 p) {
     float rim = exp(-abs(d+0.8)*0.85);
     float softEdge = exp(-max(-d,0.0)/max(radius*1.1,1.0));
     col += softEdge*(0.012 + 0.045*spec*pool);
-    col += rim*(0.035 + 0.075*spec*pool);
+    col += rim*(0.035 + 0.075*spec*pool)*(1.0-light);
+    col -= light*rim*0.13;
+    col -= light*softEdge*0.035;
     col += float3(0.018,0.020,0.023)*edge*max(n.y,0.0);
     return half4(clamp(col,0.0,1.0),1.0);
 }
